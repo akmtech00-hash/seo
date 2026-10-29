@@ -4,8 +4,8 @@
   "description": "Aegis Growth OS - Unified SEO, GEO, AXO Platform and Autonomous Lead Engine",
   "main": "index.html",
   "scripts": {
-    "start": "node backend/server.js",
-    "dev": "node backend/server.js",
+    "start": "node init && node backend/server.js",
+    "dev": "node init && node backend/server.js",
     "serve:static": "npx serve -l 3000 ."
   },
   "keywords": [
