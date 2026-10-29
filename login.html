@@ -746,6 +746,34 @@
           localStorage.setItem('aegis_user', JSON.stringify(data.user));
         }
 
+        // Initialize Stripe Checkout session
+        btn.innerHTML = '<span>Opening Stripe Checkout...</span>';
+        const checkoutRes = await fetch('/api/v1/billing/create-checkout-session', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            ...(data.token ? { 'Authorization': `Bearer ${data.token}` } : {})
+          },
+          body: JSON.stringify({
+            plan_tier: selectedPlan,
+            company_id: data.user?.company_id || 'comp_01',
+            success_url: `${window.location.origin}/dashboard/?session_id={CHECKOUT_SESSION_ID}&upgraded=true&tier=${selectedPlan}`,
+            cancel_url: `${window.location.origin}/login.html?step=subscribe&cancelled=true`
+          })
+        });
+        const checkoutData = await checkoutRes.json();
+
+        if (checkoutData.success && checkoutData.checkoutUrl) {
+          alertBox.className = 'auth-alert info';
+          alertBox.innerHTML = '<span>💳</span><div><strong>Redirecting to Stripe...</strong> Complete payment to activate continuous growth.</div>';
+          alertBox.style.display = 'flex';
+
+          setTimeout(() => {
+            window.location.href = checkoutData.checkoutUrl;
+          }, 600);
+          return;
+        }
+
         alertBox.className = 'auth-alert info';
         alertBox.innerHTML = '<span>✓</span><div><strong>Subscription Active!</strong> Welcome to Aegis Growth OS. Launching Portal...</div>';
         alertBox.style.display = 'flex';
@@ -758,7 +786,7 @@
         alertBox.innerHTML = `<span>✕</span><div>${err.message}</div>`;
         alertBox.style.display = 'flex';
         btn.disabled = false;
-        btn.innerHTML = '<span>Subscribe & Enter Client Portal</span>';
+        btn.innerHTML = '<span>Subscribe with Stripe & Enter Portal</span>';
       }
     }
   </script>

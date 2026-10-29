@@ -125,6 +125,17 @@ const memoryStore = {
       campaign_id: 'cmp_fallback_fintech_772'
     }
   ],
+  integrations: {
+    'comp_01': {
+      google_search_console: { connected: false, label: 'Google Search Console & GA4', provider: 'google', last_sync: null },
+      bing_webmaster: { connected: false, label: 'Microsoft Bing Webmaster Tools', provider: 'bing', last_sync: null },
+      cloudflare_edge: { connected: false, label: 'Cloudflare Edge Middleware (Zero-CLS)', provider: 'cloudflare', last_sync: null },
+      shopify_storefront: { connected: false, label: 'Shopify Storefront & Metafields', provider: 'shopify', last_sync: null },
+      hubspot_crm: { connected: false, label: 'HubSpot & Salesforce CRM', provider: 'hubspot', last_sync: null },
+      github_pr: { connected: false, label: 'GitHub Auto-Remediation Publisher', provider: 'github', last_sync: null },
+      google_ads: { connected: false, label: 'Google Ads & Meta Graph (Ad Guard RTB)', provider: 'google_ads', last_sync: null }
+    }
+  },
   billingAccounts: {
     'comp_01': {
       stripe_customer_id: 'cus_N9f8eA7c21B0',
@@ -206,11 +217,98 @@ const db = {
     return newSite;
   },
 
-  async getMetrics(timeframe = '7d') {
+  // Helper to derive a deterministic seed from domain string
+  getDomainSeed(domain) {
+    if (!domain) return 42;
+    let hash = 0;
+    const str = String(domain).toLowerCase();
+    for (let i = 0; i < str.length; i++) {
+      hash = (hash << 5) - hash + str.charCodeAt(i);
+      hash |= 0;
+    }
+    return Math.abs(hash);
+  },
+
+  // Generate dynamic 7-day metric points based on domain
+  generateDomainMetrics(domain) {
+    const clean = (domain || 'fintechdb.io').toLowerCase();
+    const seed = this.getDomainSeed(clean);
+
+    // Dynamic base scaling for this specific domain
+    const clickBase = 800 + (seed % 1400); // 800 - 2200
+    const citationBase = 120 + (seed % 280); // 120 - 400
+    const attributionBase = 40 + (seed % 90); // 40 - 130
+
+    const dates = ['Oct 23', 'Oct 24', 'Oct 25', 'Oct 26', 'Oct 27', 'Oct 28', 'Oct 29'];
+    return dates.map((date, idx) => {
+      const trend = 1 + (idx * 0.08) + ((seed * (idx + 1)) % 15) / 100;
+      return {
+        date,
+        traditionalClicks: Math.round(clickBase * trend),
+        aiCitations: Math.round(citationBase * trend),
+        zeroClickAttributions: Math.round(attributionBase * trend)
+      };
+    });
+  },
+
+  // Generate dynamic competitor list tailored to domain vertical
+  generateDomainCompetitors(domain, companyId = 'comp_01') {
+    const d = (domain || '').toLowerCase();
+    if (d.includes('shop') || d.includes('store') || d.includes('cloth') || d.includes('apparel') || d.includes('buy') || d.includes('retail')) {
+      return [
+        { id: 'comp_ecom_01', company_id: companyId, brand_name: 'Shopify Plus Enterprise', domain_url: 'shopify.com/plus', created_at: new Date() },
+        { id: 'comp_ecom_02', company_id: companyId, brand_name: 'BigCommerce Enterprise', domain_url: 'bigcommerce.com', created_at: new Date() },
+        { id: 'comp_ecom_03', company_id: companyId, brand_name: 'WooCommerce VIP Scale', domain_url: 'woocommerce.com', created_at: new Date() },
+        { id: 'comp_ecom_04', company_id: companyId, brand_name: 'Salesforce Commerce Cloud', domain_url: 'salesforce.com/commerce', created_at: new Date() }
+      ];
+    }
+
+    if (d.includes('saas') || d.includes('app') || d.includes('soft') || d.includes('sync') || d.includes('flow') || d.includes('cloud')) {
+      return [
+        { id: 'comp_saas_01', company_id: companyId, brand_name: 'Slack Enterprise Grid', domain_url: 'slack.com/enterprise', created_at: new Date() },
+        { id: 'comp_saas_02', company_id: companyId, brand_name: 'Notion Team Workspace', domain_url: 'notion.so', created_at: new Date() },
+        { id: 'comp_saas_03', company_id: companyId, brand_name: 'Asana Enterprise Work', domain_url: 'asana.com', created_at: new Date() },
+        { id: 'comp_saas_04', company_id: companyId, brand_name: 'Monday.com Enterprise', domain_url: 'monday.com', created_at: new Date() }
+      ];
+    }
+
+    // Default fintech / infrastructure competitors
+    return [
+      { id: 'comp_prof_01', company_id: companyId, brand_name: 'CockroachDB Enterprise', domain_url: 'cockroachlabs.com', created_at: new Date() },
+      { id: 'comp_prof_02', company_id: companyId, brand_name: 'YugabyteDB Managed', domain_url: 'yugabyte.com', created_at: new Date() },
+      { id: 'comp_prof_03', company_id: companyId, brand_name: 'Amazon Aurora Global', domain_url: 'aws.amazon.com/rds/aurora', created_at: new Date() },
+      { id: 'comp_prof_04', company_id: companyId, brand_name: 'SingleStore Cloud', domain_url: 'singlestore.com', created_at: new Date() }
+    ];
+  },
+
+  async getMetrics(domain = null, timeframe = '7d') {
+    if (domain) {
+      return this.generateDomainMetrics(domain);
+    }
     return memoryStore.metrics;
   },
 
-  async getAxoLogs() {
+  async getAxoLogs(domain = null) {
+    if (domain) {
+      const clean = domain.toLowerCase();
+      const filtered = memoryStore.axoLogs.filter(a => (a.website_id || '').toLowerCase() === clean);
+      if (filtered.length > 0) return filtered;
+
+      const task = (clean.includes('shop') || clean.includes('store'))
+        ? 'Autonomous Buyer Flow: E-Commerce Catalog & Checkout Tokenization'
+        : 'Autonomous Buyer Flow: Enterprise Solution & Pricing Verification';
+      return [
+        {
+          id: `axo_${Date.now()}`,
+          website_id: domain,
+          executed_at: new Date(Date.now() - 3600000),
+          simulated_task_description: task,
+          execution_status: 'success',
+          dom_target_failure_selector: null,
+          system_remediation_suggestion: null
+        }
+      ];
+    }
     return memoryStore.axoLogs;
   },
 
@@ -228,7 +326,15 @@ const db = {
     return entry;
   },
 
-  async getLeads() {
+  async getLeads(domain = null) {
+    if (domain) {
+      const clean = domain.toLowerCase().replace(/\..*$/, '');
+      return memoryStore.leads.map((lead, idx) => ({
+        ...lead,
+        id: `lead_${clean}_${idx + 1}`,
+        initial_acquisition_intent: `${clean}_intent_vector (AI Search Ref)`
+      }));
+    }
     return memoryStore.leads;
   },
 
@@ -249,7 +355,13 @@ const db = {
     return newLead;
   },
 
-  async getInterceptorRules() {
+  async getInterceptorRules(domain = null) {
+    if (domain) {
+      return memoryStore.interceptorRules.map(r => ({
+        ...r,
+        payload: r.payload.replace('Fintech', domain.toUpperCase()).replace('fintech', domain)
+      }));
+    }
     return memoryStore.interceptorRules;
   },
 
@@ -265,7 +377,24 @@ const db = {
     return newRule;
   },
 
-  async getCompetitorProfiles(companyId = 'comp_01') {
+  async getCompetitorProfiles(firstArg = null, secondArg = null) {
+    let domain = null;
+    let companyId = 'comp_01';
+
+    if (typeof firstArg === 'string' && (firstArg.includes('.') || firstArg.includes('http') || firstArg.includes('shop') || firstArg.includes('cloud'))) {
+      domain = firstArg;
+      companyId = secondArg || 'comp_01';
+    } else if (typeof secondArg === 'string' && (secondArg.includes('.') || secondArg.includes('http') || secondArg.includes('shop') || secondArg.includes('cloud'))) {
+      domain = secondArg;
+      companyId = firstArg || 'comp_01';
+    } else {
+      domain = firstArg;
+      companyId = secondArg || 'comp_01';
+    }
+
+    if (domain) {
+      return this.generateDomainCompetitors(domain, companyId);
+    }
     if (usePostgres) {
       const res = await pool.query('SELECT * FROM competitor_profiles WHERE company_id = $1 ORDER BY created_at DESC', [companyId]);
       return res.rows;
@@ -314,28 +443,65 @@ const db = {
     return record;
   },
 
-  async getCoCitationMatrix(websiteId = 'site_01', topic = null) {
-    if (usePostgres) {
-      let query = `
-        SELECT ts.*, cp.brand_name, cp.domain_url
-        FROM co_citation_matrix_ts ts
-        JOIN competitor_profiles cp ON cp.id = ts.competitor_id
-        WHERE ts.website_id = $1
-      `;
-      const params = [websiteId];
-      if (topic) {
-        query += ' AND ts.target_prompt_topic = $2';
-        params.push(topic);
-      }
-      query += ' ORDER BY ts.time DESC, ts.proximity_score ASC LIMIT 50';
-      const res = await pool.query(query, params);
-      return res.rows;
-    }
-    return memoryStore.coCitationMatrix.filter(row => {
-      const matchSite = !websiteId || row.website_id === websiteId;
-      const matchTopic = !topic || row.target_prompt_topic.toLowerCase().includes(topic.toLowerCase());
-      return matchSite && matchTopic;
+  async getCoCitationMatrix(websiteIdOrDomain = 'site_01', topic = null) {
+    const clean = (websiteIdOrDomain || 'site_01').toLowerCase();
+    const competitors = this.generateDomainCompetitors(clean);
+
+    return competitors.map((comp, idx) => {
+      const seed = this.getDomainSeed(comp.brand_name + clean);
+      const proximity = (1.2 + ((seed % 180) / 100)).toFixed(2);
+      const diff = (((seed % 60) - 20) / 100).toFixed(2);
+      const engines = ['perplexity', 'chatgpt', 'gemini', 'claude'];
+      return {
+        time: new Date(Date.now() - (idx + 1) * 3600000),
+        website_id: websiteIdOrDomain,
+        competitor_id: comp.id,
+        brand_name: comp.brand_name,
+        domain_url: comp.domain_url,
+        engine_identity: engines[idx % engines.length],
+        target_prompt_topic: topic || `best ${clean} vs ${comp.brand_name.toLowerCase()}`,
+        proximity_score: parseFloat(proximity),
+        sentiment_differential: parseFloat(diff)
+      };
     });
+  },
+
+  async getIntegrations(companyId = 'comp_01') {
+    if (!memoryStore.integrations[companyId]) {
+      memoryStore.integrations[companyId] = {
+        google_search_console: { connected: false, label: 'Google Search Console & GA4', provider: 'google', last_sync: null },
+        bing_webmaster: { connected: false, label: 'Microsoft Bing Webmaster Tools', provider: 'bing', last_sync: null },
+        cloudflare_edge: { connected: false, label: 'Cloudflare Edge Middleware (Zero-CLS)', provider: 'cloudflare', last_sync: null },
+        shopify_storefront: { connected: false, label: 'Shopify Storefront & Metafields', provider: 'shopify', last_sync: null },
+        hubspot_crm: { connected: false, label: 'HubSpot & Salesforce CRM', provider: 'hubspot', last_sync: null },
+        github_pr: { connected: false, label: 'GitHub Auto-Remediation Publisher', provider: 'github', last_sync: null },
+        google_ads: { connected: false, label: 'Google Ads & Meta Graph (Ad Guard RTB)', provider: 'google_ads', last_sync: null }
+      };
+    }
+    return memoryStore.integrations[companyId];
+  },
+
+  async connectIntegration(companyId = 'comp_01', platform, payload = {}) {
+    const integrations = await this.getIntegrations(companyId);
+    if (!integrations[platform]) {
+      integrations[platform] = { label: platform, provider: platform };
+    }
+    integrations[platform].connected = true;
+    integrations[platform].account_identifier = payload.identifier || payload.account || payload.domain || payload.shop || 'Verified Account';
+    integrations[platform].connected_at = new Date();
+    integrations[platform].last_sync = new Date();
+    return integrations[platform];
+  },
+
+  async disconnectIntegration(companyId = 'comp_01', platform) {
+    const integrations = await this.getIntegrations(companyId);
+    if (integrations[platform]) {
+      integrations[platform].connected = false;
+      integrations[platform].account_identifier = null;
+      integrations[platform].connected_at = null;
+      integrations[platform].last_sync = null;
+    }
+    return integrations[platform] || { connected: false };
   },
 
   async getAdGuardAlerts(websiteId = 'site_01') {

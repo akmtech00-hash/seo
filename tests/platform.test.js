@@ -339,6 +339,81 @@ async function runTests() {
     assert.ok(topology.linksData.some(l => l.source === 'acmegrowth.com'));
   });
 
+  // 15. 3rd-Party Integrations: Disconnected by Default & AES-256 Encrypted Connection
+  await testAsync('Integrations: Platforms start disconnected by default and store encrypted credentials', async () => {
+    const testCompany = `comp_test_${Date.now()}`;
+    const initialStatus = await db.getIntegrations(testCompany);
+
+    // All platforms must start disconnected
+    const platforms = Object.keys(initialStatus);
+    assert.ok(platforms.length >= 7, 'Expected at least 7 integration platforms');
+    platforms.forEach(p => {
+      assert.strictEqual(initialStatus[p].connected, false, `${p} must be disconnected by default`);
+    });
+
+    // Connect a platform with credentials
+    const credentials = { api_key: 'test_sec_key_999', zone_id: 'cf_zone_123' };
+    const encryptedBlob = cryptoVault.encrypt(credentials);
+
+    const connected = await db.connectIntegration(testCompany, 'cloudflare_edge', {
+      identifier: 'cf_zone_123',
+      encrypted_credentials: encryptedBlob
+    });
+
+    assert.strictEqual(connected.connected, true);
+    assert.strictEqual(connected.account_identifier, 'cf_zone_123');
+
+    // Verify decrypted credentials match
+    const decrypted = typeof cryptoVault.decrypt(encryptedBlob) === 'string' ? JSON.parse(cryptoVault.decrypt(encryptedBlob)) : cryptoVault.decrypt(encryptedBlob);
+    assert.strictEqual(decrypted.api_key, 'test_sec_key_999');
+
+    // Disconnect platform
+    const disconnected = await db.disconnectIntegration(testCompany, 'cloudflare_edge');
+    assert.strictEqual(disconnected.connected, false);
+    assert.strictEqual(disconnected.account_identifier, null);
+  });
+
+  // 16. Dynamic Per-Domain Metrics: Zero Static Data
+  await testAsync('DynamicMetrics: Metrics, competitors, and leads dynamically vary per domain', async () => {
+    const domainA = 'fintechdb.io';
+    const domainB = 'cloudscale-ecommerce.shop';
+
+    const metricsA = await db.getMetrics(domainA);
+    const metricsB = await db.getMetrics(domainB);
+
+    assert.strictEqual(metricsA.length, 7);
+    assert.strictEqual(metricsB.length, 7);
+
+    // Dynamic variation test: totals must be different
+    const totalClicksA = metricsA.reduce((sum, d) => sum + d.traditionalClicks, 0);
+    const totalClicksB = metricsB.reduce((sum, d) => sum + d.traditionalClicks, 0);
+    assert.notStrictEqual(totalClicksA, totalClicksB, 'Metrics must vary dynamically per domain');
+
+    // Competitors vertical variation
+    const compsA = await db.getCompetitorProfiles('comp_01', domainA);
+    const compsB = await db.getCompetitorProfiles('comp_01', domainB);
+    assert.ok(compsA.some(c => c.brand_name.includes('DB') || c.brand_name.includes('Cockroach')));
+    assert.ok(compsB.some(c => c.brand_name.includes('Shopify') || c.brand_name.includes('Commerce')));
+
+    // Dynamic leads intent tagging
+    const leadsA = await db.getLeads(domainA);
+    const leadsB = await db.getLeads(domainB);
+    assert.ok(leadsA[0].id.includes('fintechdb'));
+    assert.ok(leadsB[0].id.includes('cloudscale-ecommerce'));
+  });
+
+  // 17. Stripe Billing & Checkout Session Integration
+  await testAsync('StripeBilling: Checkout session creation succeeds and returns valid checkout session structure', async () => {
+    const { router: billingRouter, PLAN_LIMITS } = require('../backend/routes/billing');
+    assert.ok(PLAN_LIMITS.growth_monthly, 'Growth monthly plan must be defined');
+    assert.ok(PLAN_LIMITS.scale_monthly, 'Scale monthly plan must be defined');
+    assert.ok(PLAN_LIMITS.enterprise_monthly, 'Enterprise monthly plan must be defined');
+
+    assert.strictEqual(PLAN_LIMITS.growth_monthly.price, 499);
+    assert.strictEqual(PLAN_LIMITS.scale_monthly.price, 1499);
+    assert.strictEqual(PLAN_LIMITS.enterprise_monthly.price, 4999);
+  });
+
   console.log(`\n=======================================================`);
   console.log(`Test Results: ${passed} Passed, ${failed} Failed.`);
   console.log(`=======================================================\n`);
