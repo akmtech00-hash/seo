@@ -616,9 +616,15 @@
           throw new Error(data.error || 'Failed to activate trial');
         }
 
-        // Store session token in localStorage for clients using bearer header
+        // Store session token and active domain in localStorage
         localStorage.setItem('aegis_session_token', data.token);
         localStorage.setItem('aegis_user', JSON.stringify(data.user));
+        if (data.connectedDomain) {
+          localStorage.setItem('aegis_active_domain', data.connectedDomain);
+        } else if (payload.companyName) {
+          const dom = payload.companyName.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+          localStorage.setItem('aegis_active_domain', dom);
+        }
 
         alertBox.className = 'auth-alert info';
         alertBox.innerHTML = '<span>✓</span><div><strong>Success!</strong> 1-Day Free Trial activated. Launching Client Portal...</div>';

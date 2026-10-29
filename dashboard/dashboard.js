@@ -255,6 +255,128 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // =========================================================================
+  // DOMAIN ORCHESTRATION & SWITCHING STATE
+  // All modules dynamically react to the active connected domain
+  // =========================================================================
+  let activeDomain = localStorage.getItem('aegis_active_domain') || null;
+  let connectedWebsites = [];
+
+  function updateActiveDomainUI() {
+    if (!activeDomain && connectedWebsites.length > 0) {
+      activeDomain = connectedWebsites[0].domain;
+      localStorage.setItem('aegis_active_domain', activeDomain);
+    }
+
+    const currentDomainEl = document.getElementById('workspace-current-domain');
+    if (currentDomainEl) {
+      currentDomainEl.textContent = activeDomain || 'No Domain Connected';
+    }
+
+    const breadcrumbDomainEl = document.getElementById('topbar-active-domain');
+    if (breadcrumbDomainEl) {
+      breadcrumbDomainEl.textContent = activeDomain || 'No Domain';
+    }
+
+    const exportBtn = document.getElementById('btn-export-report');
+    if (exportBtn && activeDomain) {
+      exportBtn.href = `${API_BASE}/websites/${encodeURIComponent(activeDomain)}/export/report`;
+    }
+
+    // Update domain-specific input defaults across modules
+    syncDomainToModules(activeDomain);
+
+    // Populate the domain dropdown switcher menu
+    const dropdownItemsEl = document.getElementById('workspace-domain-items');
+    if (dropdownItemsEl) {
+      if (connectedWebsites.length === 0) {
+        dropdownItemsEl.innerHTML = `<div style="padding: 8px 12px; font-size: 12px; color: var(--color-slate-gray);">No domains connected</div>`;
+      } else {
+        dropdownItemsEl.innerHTML = connectedWebsites.map(site => {
+          const isActive = site.domain.toLowerCase() === (activeDomain || '').toLowerCase();
+          return `
+            <div class="domain-dropdown-option ${isActive ? 'active' : ''}" data-domain="${site.domain}" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; cursor: pointer; font-size: 12.5px; transition: background 0.15s; ${isActive ? 'background: #eff6ff; font-weight: 700; color: var(--color-signal-blue);' : 'color: var(--color-ink-navy);'}">
+              <div style="display: flex; align-items: center; gap: 6px; overflow: hidden;">
+                <span>${isActive ? '✓' : '•'}</span>
+                <span style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${site.domain}</span>
+              </div>
+              <span style="font-size: 10.5px; padding: 2px 6px; border-radius: 4px; ${isActive ? 'background: #dbeafe; color: var(--color-signal-blue); font-weight: 700;' : 'color: var(--color-slate-gray);'}">
+                ${isActive ? 'Active' : (site.health_score ? `${site.health_score}/100` : '96/100')}
+              </span>
+            </div>
+          `;
+        }).join('');
+
+        dropdownItemsEl.querySelectorAll('.domain-dropdown-option').forEach(el => {
+          el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const chosen = el.getAttribute('data-domain');
+            const menu = document.getElementById('workspace-domain-dropdown-menu');
+            if (menu) menu.style.display = 'none';
+            switchActiveDomain(chosen);
+          });
+        });
+      }
+    }
+  }
+
+  function syncDomainToModules(domain) {
+    if (!domain) return;
+    const shopifyDomainInput = document.getElementById('shopify-shop-domain');
+    if (shopifyDomainInput && !shopifyDomainInput.dataset.userEdited) {
+      const cleanBrand = domain.replace(/\..*$/, '');
+      shopifyDomainInput.value = `${cleanBrand}.myshopify.com`;
+    }
+
+    const vectorQueryInput = document.getElementById('vector-query-input');
+    if (vectorQueryInput) {
+      vectorQueryInput.placeholder = `e.g. Does ${domain} guarantee SLA uptime and high availability?`;
+    }
+
+    const adguardTopicInput = document.getElementById('adguard-sim-topic');
+    if (adguardTopicInput && !adguardTopicInput.dataset.userEdited) {
+      adguardTopicInput.value = `enterprise distributed ${domain}`;
+    }
+
+    const battlecardIntentInput = document.getElementById('battlecard-lead-intent');
+    if (battlecardIntentInput && !battlecardIntentInput.dataset.userEdited) {
+      battlecardIntentInput.value = `high performance solutions for ${domain}`;
+    }
+  }
+
+  async function switchActiveDomain(newDomain) {
+    if (!newDomain) return;
+    activeDomain = newDomain;
+    localStorage.setItem('aegis_active_domain', activeDomain);
+    updateActiveDomainUI();
+    showToast(`Switched active domain to ${newDomain}`, 'info');
+
+    await refreshWebsites();
+    await loadCoCitationTopology(activeDomain);
+  }
+
+  // Toggle domain switcher dropdown
+  const domainSwitcherBtn = document.getElementById('workspace-domain-switcher-btn');
+  const domainDropdownMenu = document.getElementById('workspace-domain-dropdown-menu');
+  domainSwitcherBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (!domainDropdownMenu) return;
+    const isShowing = domainDropdownMenu.style.display === 'block';
+    domainDropdownMenu.style.display = isShowing ? 'none' : 'block';
+  });
+
+  document.addEventListener('click', (e) => {
+    if (domainDropdownMenu && !domainDropdownMenu.contains(e.target) && e.target !== domainSwitcherBtn) {
+      domainDropdownMenu.style.display = 'none';
+    }
+  });
+
+  document.getElementById('btn-dropdown-connect-domain')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (domainDropdownMenu) domainDropdownMenu.style.display = 'none';
+    document.getElementById('btn-add-domain-modal')?.click();
+  });
+
   async function refreshWebsites() {
     const listContainer = document.getElementById('website-list-container');
     if (!listContainer) return;
@@ -264,21 +386,47 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
 
       if (data.success && data.websites.length > 0) {
-        listContainer.innerHTML = data.websites.map(site => `
-          <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--color-pebble); border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--color-hairline);">
+        connectedWebsites = data.websites;
+
+        if (!activeDomain || !connectedWebsites.some(s => s.domain.toLowerCase() === activeDomain.toLowerCase())) {
+          activeDomain = connectedWebsites[0].domain;
+          localStorage.setItem('aegis_active_domain', activeDomain);
+        }
+
+        updateActiveDomainUI();
+
+        listContainer.innerHTML = connectedWebsites.map(site => {
+          const isActive = site.domain.toLowerCase() === (activeDomain || '').toLowerCase();
+          return `
+          <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: ${isActive ? '#f0f7ff' : 'var(--color-pebble)'}; border-radius: 8px; margin-bottom: 10px; border: 1.5px solid ${isActive ? 'var(--color-signal-blue)' : 'var(--color-hairline)'}; transition: all 0.2s;">
             <div style="display: flex; align-items: center; gap: 12px;">
-              <div style="width: 32px; height: 32px; background: var(--color-badge-bg); color: var(--color-signal-blue); font-weight: 800; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px;">🌐</div>
+              <div style="width: 36px; height: 36px; background: ${isActive ? 'rgba(0, 107, 255, 0.15)' : 'var(--color-badge-bg)'}; color: var(--color-signal-blue); font-weight: 800; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px;">🌐</div>
               <div>
-                <strong style="color: var(--color-ink-navy); font-size: 14px;">${site.domain}</strong>
-                <div style="font-size: 12px; color: var(--color-slate-gray);">Health Score: <span style="font-weight: 700; color: #10b981;">${site.health_score || 96}/100</span> • Edge Worker: Active</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <strong style="color: var(--color-ink-navy); font-size: 14.5px;">${site.domain}</strong>
+                  ${isActive ? '<span class="badge-pill success" style="font-size: 10px; padding: 2px 8px;">ACTIVE DOMAIN</span>' : ''}
+                </div>
+                <div style="font-size: 12px; color: var(--color-slate-gray); margin-top: 2px;">
+                  Health Score: <span style="font-weight: 700; color: #10b981;">${site.health_score || 95}/100</span> • Edge Worker: Active • Latency: &lt;1ms
+                </div>
               </div>
             </div>
-            <div style="display: flex; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              ${!isActive ? `<button class="btn btn-ghost btn-switch-active-site" data-domain="${site.domain}" style="font-size: 12px; padding: 6px 12px; border: 1px solid var(--color-hairline); background: var(--color-paper);">Switch Active</button>` : ''}
               <button class="btn btn-dark btn-audit-site" data-domain="${site.domain}" style="font-size: 12px; padding: 6px 12px;">Audit</button>
               <button class="btn btn-primary btn-axo-site" data-domain="${site.domain}" style="font-size: 12px; padding: 6px 12px;">Run AXO</button>
             </div>
           </div>
-        `).join('');
+        `;
+        }).join('');
+
+        // Bind switch active buttons
+        document.querySelectorAll('.btn-switch-active-site').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const domain = btn.getAttribute('data-domain');
+            switchActiveDomain(domain);
+          });
+        });
 
         // Bind audit buttons
         document.querySelectorAll('.btn-audit-site').forEach(btn => {
@@ -298,29 +446,32 @@ document.addEventListener('DOMContentLoaded', () => {
         listContainer.innerHTML = `<div style="text-align: center; padding: 16px; color: var(--color-slate-gray);">No domains connected yet. Click "+ Connect Domain" above.</div>`;
       }
     } catch (err) {
-      listContainer.innerHTML = `<div style="color: #ef4444; font-size: 13px;">Failed to load domains from gateway.</div>`;
+      listContainer.innerHTML = `<div style="color: #ef4444; font-size: 13px;">Failed to load domains from gateway: ${err.message}</div>`;
     }
   }
 
   // =========================================================================
   // 3. TRIGGER AUDIT ACTION
   // =========================================================================
-  async function triggerAudit(domain = 'fintechdb.io') {
+  async function triggerAudit(domain = null) {
+    const targetDomain = domain || activeDomain;
+    if (!targetDomain) return;
+
     const btn = document.getElementById('btn-trigger-crawl');
     if (btn) {
       btn.disabled = true;
-      btn.textContent = "Auditing Site...";
+      btn.textContent = `Auditing ${targetDomain}...`;
     }
 
     try {
-      const res = await fetch(`${API_BASE}/websites/${encodeURIComponent(domain)}/audit`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/websites/${encodeURIComponent(targetDomain)}/audit`, { method: 'POST' });
       const data = await res.json();
 
       if (data.success && data.audit) {
         const scorePill = document.getElementById('audit-score-pill');
         if (scorePill) scorePill.textContent = `Score: ${data.audit.healthScore} / 100`;
 
-        showToast(`Audit Complete for ${domain}! Health: ${data.audit.healthScore}/100, Latency: ${data.audit.latencyMs}ms`, 'success');
+        showToast(`Audit Complete for ${targetDomain}! Health: ${data.audit.healthScore}/100, Latency: ${data.audit.latencyMs}ms`, 'success');
       }
     } catch (err) {
       showToast(`Audit error: ${err.message}`, 'error');
@@ -332,22 +483,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  document.getElementById('btn-trigger-crawl')?.addEventListener('click', () => triggerAudit('fintechdb.io'));
+  document.getElementById('btn-trigger-crawl')?.addEventListener('click', () => triggerAudit(activeDomain));
 
   // Add Domain Modal Prompt
   document.getElementById('btn-add-domain-modal')?.addEventListener('click', async () => {
-    const domain = prompt('Enter your domain URL (e.g. mycompany.com):');
-    if (domain) {
+    const domainInput = prompt('Enter your domain URL to connect (e.g. mycompany.com):');
+    if (domainInput) {
+      const clean = domainInput.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+      if (!clean) return;
       try {
         const res = await fetch(`${API_BASE}/websites`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ domain })
+          body: JSON.stringify({ domain: clean })
         });
         const data = await res.json();
         if (data.success) {
-          showToast(`Domain ${domain} connected! Launching baseline audit.`, 'success');
-          await refreshWebsites();
+          showToast(`Domain ${clean} connected! Switching active domain and launching audit.`, 'success');
+          await switchActiveDomain(clean);
+          triggerAudit(clean);
         } else {
           showToast(data.error, 'error');
         }
@@ -360,13 +514,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // =========================================================================
   // 4. AXO AGENT MISSION RUNNER
   // =========================================================================
-  async function triggerAxo(domain = 'fintechdb.io') {
+  async function triggerAxo(domain = null) {
+    const targetDomain = domain || activeDomain;
+    if (!targetDomain) return;
+
     const logsContainer = document.getElementById('axo-dashboard-logs');
     const btn = document.getElementById('btn-run-dashboard-axo');
 
     if (btn) {
       btn.disabled = true;
-      btn.textContent = "Agent Running Mission...";
+      btn.textContent = `Running Mission on ${targetDomain}...`;
     }
 
     if (logsContainer) {
@@ -534,10 +691,10 @@ document.addEventListener('DOMContentLoaded', () => {
   btnGenSchema?.addEventListener('click', async () => {
     btnGenSchema.textContent = "Generating...";
     try {
-      const res = await fetch(`${API_BASE}/websites/fintechdb.io/remediation/generate-schema`, {
+      const res = await fetch(`${API_BASE}/websites/${encodeURIComponent(activeDomain)}/remediation/generate-schema`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brandName: "FintechDB Enterprise" })
+        body: JSON.stringify({ brandName: activeDomain })
       });
       const data = await res.json();
       if (data.success) {
@@ -556,10 +713,10 @@ document.addEventListener('DOMContentLoaded', () => {
   btnGenLlmsTxt?.addEventListener('click', async () => {
     btnGenLlmsTxt.textContent = "Generating...";
     try {
-      const res = await fetch(`${API_BASE}/websites/fintechdb.io/remediation/generate-llmstxt`, {
+      const res = await fetch(`${API_BASE}/websites/${encodeURIComponent(activeDomain)}/remediation/generate-llmstxt`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brandName: "FintechDB Enterprise" })
+        body: JSON.stringify({ brandName: activeDomain })
       });
       const data = await res.json();
       if (data.success) {
@@ -584,10 +741,11 @@ document.addEventListener('DOMContentLoaded', () => {
     btnCreatePR.textContent = "Opening Pull Request...";
 
     try {
-      const res = await fetch(`${API_BASE}/websites/fintechdb.io/remediation/create-pr`, {
+      const repoSlug = `${activeDomain.replace(/\..*$/, '')}/enterprise-platform`;
+      const res = await fetch(`${API_BASE}/websites/${encodeURIComponent(activeDomain)}/remediation/create-pr`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ repoSlug: "acme-corp/fintech-db-platform" })
+        body: JSON.stringify({ repoSlug })
       });
       const data = await res.json();
 
@@ -627,7 +785,7 @@ document.addEventListener('DOMContentLoaded', () => {
     vectorResultsContainer.innerHTML = '<div style="color: var(--color-slate-gray); font-size: 12px;">Querying 1536-dimensional HNSW cosine index...</div>';
 
     try {
-      const res = await fetch(`${API_BASE}/websites/fintechdb.io/query-knowledge`, {
+      const res = await fetch(`${API_BASE}/websites/${encodeURIComponent(activeDomain)}/query-knowledge`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query, topK: 3 })
@@ -659,10 +817,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const content = vectorRawContent.value;
 
     try {
-      const res = await fetch(`${API_BASE}/websites/fintechdb.io/vectorize`, {
+      const res = await fetch(`${API_BASE}/websites/${encodeURIComponent(activeDomain)}/vectorize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, url: 'https://fintechdb.io/specs' })
+        body: JSON.stringify({ content, url: `https://${activeDomain}/specs` })
       });
       const data = await res.json();
       if (data.success) {
@@ -786,7 +944,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch(`${API_BASE}/leads/${activeLeadId}/reply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ replyText, domain: 'fintechdb.io' })
+        body: JSON.stringify({ replyText, domain: activeDomain })
       });
       const data = await res.json();
       if (data.success) {
@@ -810,12 +968,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let topologySimulation = null;
 
-  async function loadCoCitationTopology() {
+  async function loadCoCitationTopology(domain = null) {
+    const targetDomain = domain || activeDomain || '';
     const svgEl = document.getElementById('cocitation-svg');
     if (!svgEl) return;
 
     try {
-      const res = await fetch(`${API_BASE}/prompt-compiler/topology?website_id=site_01`);
+      const res = await fetch(`${API_BASE}/prompt-compiler/topology?domain=${encodeURIComponent(targetDomain)}`);
       const data = await res.json();
       if (!data.success) return;
 
@@ -1043,11 +1202,11 @@ document.addEventListener('DOMContentLoaded', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          website_id: 'site_01',
+          website_id: activeDomain || 'site_01',
           keyword_topic: topic,
           current_share_of_voice: sov,
           customer_ad_account_id: '982-114-8802',
-          associated_fallback_campaign_id: 'cmp_fallback_fintech_772',
+          associated_fallback_campaign_id: `cmp_fallback_${(activeDomain || 'site').replace(/\..*$/, '')}`,
           boost_budget_id: 'bgt_boost_550'
         })
       });
@@ -1149,9 +1308,9 @@ ${JSON.stringify(data.metaRetargetingPayload || {}, null, 2)}
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           pageId: '102',
-          targetUrl: 'https://fintechdb.io/enterprise',
-          modifications: [{ selector: 'h1.product-title', content: 'Low-Latency ACID Core for Fintech' }],
-          intentTag: 'enterprise_fintech_scalability',
+          targetUrl: `https://${activeDomain}/enterprise`,
+          modifications: [{ selector: 'h1.product-title', content: `High-Performance Infrastructure for ${activeDomain}` }],
+          intentTag: 'enterprise_autonomous_scaling',
           platform: 'wordpress'
         })
       });
@@ -1172,7 +1331,7 @@ ${JSON.stringify(data.metaRetargetingPayload || {}, null, 2)}
       const res = await fetch(`${API_BASE}/sync/cms/export-edge`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ domain: 'fintechdb.io' })
+        body: JSON.stringify({ domain: activeDomain })
       });
       const data = await res.json();
       if (resBox) {

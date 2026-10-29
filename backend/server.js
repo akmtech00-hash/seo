@@ -486,8 +486,8 @@ app.post('/api/v1/prompt-compiler/sweep', async (req, res) => {
 
 app.get('/api/v1/prompt-compiler/topology', async (req, res) => {
   try {
-    const { website_id, company_id } = req.query;
-    const topology = await promptCompilerService.getTopologyGraph(website_id || 'site_01', company_id || 'comp_01');
+    const { website_id, company_id, domain } = req.query;
+    const topology = await promptCompilerService.getTopologyGraph(website_id || 'site_01', company_id || 'comp_01', domain);
     res.json({ success: true, ...topology });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

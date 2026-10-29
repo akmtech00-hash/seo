@@ -48,6 +48,7 @@ router.post('/signup', async (req, res) => {
         : 'Account created with subscription!',
       token: result.token,
       user: result.user,
+      connectedDomain: result.connectedDomain,
       allowed: result.allowed,
       redirectUrl: result.allowed ? '/dashboard' : '/login.html?step=subscribe'
     });

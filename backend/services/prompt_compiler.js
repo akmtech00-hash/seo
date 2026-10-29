@@ -101,11 +101,22 @@ class PromptCompilerService {
    * Nodes: Origin brand (central hub) + Competitor brands
    * Links: Vectors with dynamic closeness weights based on reciprocal proximity
    */
-  async getTopologyGraph(websiteId = 'site_01', companyId = 'comp_01') {
+  async getTopologyGraph(websiteId = 'site_01', companyId = 'comp_01', targetDomain = null) {
     const sites = await db.getWebsites();
-    const site = sites.find(s => s.id === websiteId) || sites[0] || { domain: 'fintechdb.io' };
+    let site = null;
+    if (targetDomain) {
+      site = sites.find(s => s.domain.toLowerCase() === targetDomain.toLowerCase());
+    }
+    if (!site && websiteId) {
+      site = sites.find(s => s.id === websiteId || s.domain.toLowerCase() === websiteId.toLowerCase());
+    }
+    if (!site) {
+      site = sites[0] || { domain: targetDomain || 'Connected Domain' };
+    }
+
+    const resolvedDomain = targetDomain || site.domain;
     const competitors = await db.getCompetitorProfiles(companyId);
-    const coCitations = await db.getCoCitationMatrix(websiteId);
+    const coCitations = await db.getCoCitationMatrix(site.id || 'site_01');
 
     // Group citations by competitor
     const citationCounts = {};
@@ -126,7 +137,7 @@ class PromptCompilerService {
 
     // Central origin node
     const originNode = {
-      id: site.domain || 'Your Brand',
+      id: resolvedDomain,
       group: 'origin',
       citationCount: Math.max(18, coCitations.length * 3)
     };
@@ -159,7 +170,7 @@ class PromptCompilerService {
     });
 
     return {
-      originDomain: site.domain,
+      originDomain: resolvedDomain,
       totalPromptsEvaluated: 120,
       nodesData,
       linksData

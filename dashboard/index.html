@@ -23,11 +23,26 @@
         <div class="badge-pill success" style="font-size: 10px; padding: 2px 8px;">v2.0 PRO</div>
       </div>
 
-      <div class="workspace-selector">
-        <span class="text-caption" style="color: var(--color-slate-gray);">Active Workspace</span>
-        <div class="workspace-dropdown">
-          <span style="font-weight: 700; color: var(--color-ink-navy);">Acme Fintech Corp</span>
+      <div class="workspace-selector" style="position: relative;">
+        <span class="text-caption" style="color: var(--color-slate-gray); font-size: 11px; font-weight: 600;">Active Connected Domain</span>
+        <div class="workspace-dropdown" id="workspace-domain-switcher-btn" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; background: var(--color-paper); border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); margin-top: 4px; box-shadow: 0 1px 2px rgba(11, 53, 88, 0.04);">
+          <div style="display: flex; align-items: center; gap: 7px; overflow: hidden;">
+            <span style="font-size: 13px;">🌐</span>
+            <span id="workspace-current-domain" style="font-weight: 700; color: var(--color-ink-navy); font-size: 13px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">Loading domain...</span>
+          </div>
           <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+
+        <!-- Dropdown Menu for Domain Switching -->
+        <div id="workspace-domain-dropdown-menu" style="display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--color-paper); border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); box-shadow: var(--shadow-hover); z-index: 120; padding: 6px 0;">
+          <div id="workspace-domain-items" style="max-height: 200px; overflow-y: auto;">
+            <!-- Rendered dynamically -->
+          </div>
+          <div style="border-top: 1px solid var(--color-hairline); padding: 8px 12px; margin-top: 4px;">
+            <button id="btn-dropdown-connect-domain" style="width: 100%; background: none; border: none; color: var(--color-signal-blue); font-size: 12.5px; font-weight: 600; cursor: pointer; text-align: left; padding: 2px 0; display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 15px; font-weight: 700;">+</span> Connect New Domain
+            </button>
+          </div>
         </div>
       </div>
 
@@ -159,7 +174,7 @@
             <span>/</span>
             <span id="topbar-current-breadcrumb" style="color: var(--color-ink-navy); font-weight: 600;">Executive Overview</span>
             <span>•</span>
-            <span style="font-family: monospace; font-size: 11px;">fintechdb.io</span>
+            <span id="topbar-active-domain" style="font-family: monospace; font-size: 11px; font-weight: 700; color: var(--color-signal-blue);">Connecting...</span>
           </div>
         </div>
 
@@ -173,7 +188,7 @@
             </button>
           </div>
 
-          <a href="/api/v1/websites/fintechdb.io/export/report" target="_blank" class="btn btn-ghost" id="btn-export-report" style="font-size: 13px; padding: 8px 14px; border: 1px solid var(--color-hairline);">
+          <a href="#" target="_blank" class="btn btn-ghost" id="btn-export-report" style="font-size: 13px; padding: 8px 14px; border: 1px solid var(--color-hairline);">
             📄 Export Executive Report
           </a>
           <button class="btn btn-dark" id="btn-add-domain-modal" style="font-size: 13.5px; padding: 8px 16px;">

@@ -322,6 +322,23 @@ async function runTests() {
     assert.strictEqual(session.allowed, false);
   });
 
+  // 14. Connected Monitored Websites & Dynamic Domain Orchestration Tests
+  await testAsync('DomainOrchestration: Connecting a new domain updates topology origin and deduplicates', async () => {
+    const connected = await db.addWebsite('https://acmegrowth.com/enterprise/');
+    assert.strictEqual(connected.domain, 'acmegrowth.com');
+
+    // Deduplication check
+    const duplicate = await db.addWebsite('acmegrowth.com');
+    assert.strictEqual(duplicate.id, connected.id);
+
+    // Topology origin check: topology graph origin reflects connected domain
+    const topology = await promptCompiler.getTopologyGraph(null, 'comp_01', 'acmegrowth.com');
+    const origin = topology.nodesData.find(n => n.group === 'origin');
+    assert.strictEqual(origin.id, 'acmegrowth.com');
+    assert.strictEqual(topology.originDomain, 'acmegrowth.com');
+    assert.ok(topology.linksData.some(l => l.source === 'acmegrowth.com'));
+  });
+
   console.log(`\n=======================================================`);
   console.log(`Test Results: ${passed} Passed, ${failed} Failed.`);
   console.log(`=======================================================\n`);

@@ -168,12 +168,29 @@ const db = {
     return memoryStore.websites;
   },
 
-  async addWebsite(domain) {
+  async addWebsite(domain, company_id = 'comp_01') {
+    const cleanDomain = (domain || '')
+      .trim()
+      .toLowerCase()
+      .replace(/^https?:\/\//, '')
+      .replace(/\/.*$/, '')
+      .trim();
+
+    if (!cleanDomain) {
+      throw new Error('Valid domain name is required');
+    }
+
+    const existing = memoryStore.websites.find(s => s.domain.toLowerCase() === cleanDomain);
+    if (existing) {
+      existing.last_audit_at = new Date();
+      return existing;
+    }
+
     const newSite = {
       id: `site_${Date.now()}`,
-      company_id: 'comp_01',
-      domain: domain.replace(/https?:\/\//, '').replace(/\/.*$/, ''),
-      health_score: 94,
+      company_id,
+      domain: cleanDomain,
+      health_score: 95,
       edge_middleware_enabled: true,
       last_audit_at: new Date(),
       created_at: new Date()

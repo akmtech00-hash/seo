@@ -69,9 +69,33 @@ class AuthService {
       session_token
     });
 
+    let connectedDomain = null;
+    if (companyName) {
+      const cleanCandidate = companyName.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+      if (cleanCandidate) {
+        try {
+          const site = await db.addWebsite(cleanCandidate, newUser.company_id);
+          connectedDomain = site.domain;
+        } catch (e) {
+          console.warn('Auto-domain add skipped:', e.message);
+        }
+      }
+    } else if (cleanEmail.includes('@')) {
+      const emailDomain = cleanEmail.split('@')[1];
+      if (!['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com'].includes(emailDomain)) {
+        try {
+          const site = await db.addWebsite(emailDomain, newUser.company_id);
+          connectedDomain = site.domain;
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+
     return {
       user: this.sanitizeUser(newUser),
       token: session_token,
+      connectedDomain,
       allowed: this.isUserAllowed(newUser)
     };
   }
