@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aegis Growth OS — Client SaaS Dashboard</title>
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+</head>
+<body class="dashboard-body">
+
+  <!-- Dashboard App Shell -->
+  <div class="app-layout">
+    
+    <!-- Sidebar Navigation (Calendly Restrained Navy & Paper Style) -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a href="/" class="nav-brand">
+          <div class="nav-brand-logo">A</div>
+          <span>Aegis OS</span>
+        </a>
+        <div class="badge-pill success" style="font-size: 10px; padding: 2px 8px;">v2.0 PRO</div>
+      </div>
+
+      <div class="workspace-selector">
+        <span class="text-caption" style="color: var(--color-slate-gray);">Active Workspace</span>
+        <div class="workspace-dropdown">
+          <span style="font-weight: 700; color: var(--color-ink-navy);">Acme Fintech Corp</span>
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+      </div>
+
+      <nav class="sidebar-menu">
+        <button class="nav-item active" data-tab="tab-overview">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <span>Executive Overview</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-cocitation">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          <span>Co-Citation Topology</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-adguard">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="11" r="3"/></svg>
+          <span>Real-Time Ad Guard</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-cmssync">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Native CMS & Shopify</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-geo">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span>Generative AEO/GEO</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-axo">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          <span>Agent Sandbox (AXO)</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-interceptor">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+          <span>Intent Interceptor</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-leads">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Autonomous Leads</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-remediation">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          <span>Auto-Remediation & PRs</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-billing">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          <span>Billing & Usage Quotas</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-vectors">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+          <span>Vector Memory (SDR)</span>
+        </button>
+
+        <button class="nav-item" data-tab="tab-settings">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>Integrations & Vault</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="/" class="btn-ghost" style="font-size: 13px; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Back to Public Site
+        </a>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Content Area -->
+    <main class="dashboard-main">
+      
+      <!-- Top Bar -->
+      <header class="dashboard-topbar">
+        <div>
+          <h1 class="text-subheading" style="font-size: 22px;">Executive Growth Overview</h1>
+          <p class="text-caption" style="color: var(--color-slate-gray);">Unified SEO, GEO & Inbound Revenue Dashboard</p>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <a href="/api/v1/websites/fintechdb.io/export/report" target="_blank" class="btn btn-ghost" id="btn-export-report" style="font-size: 13px; padding: 8px 14px; border: 1px solid var(--color-hairline);">
+            📄 Export Executive Report
+          </a>
+          <button class="btn btn-dark" id="btn-add-domain-modal" style="font-size: 14px; padding: 8px 16px;">
+            + Connect Domain
+          </button>
+          <button class="btn btn-primary" id="btn-trigger-crawl" style="font-size: 14px; padding: 8px 16px;">
+            Trigger Audit
+          </button>
+        </div>
+      </header>
+
+      <!-- View Containers -->
+      <div class="dashboard-content">
+        
+        <!-- Tab 1: Executive Overview -->
+        <section id="tab-overview" class="tab-pane active">
+          
+          <!-- Autonomous Hourly Enhancement Engine Banner -->
+          <div style="background: var(--color-pebble); border: 1px solid var(--color-hairline); border-radius: var(--radius-cards); padding: 14px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-sm);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="width: 10px; height: 10px; border-radius: 50%; background: #10b981; display: inline-block; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);"></span>
+              <div>
+                <strong style="font-size: 13px; color: var(--color-ink-navy);">Autonomous Hourly Enhancement Engine: ACTIVE</strong>
+                <span id="hourly-banner-subtitle" style="font-size: 12px; color: var(--color-slate-gray); display: block; margin-top: 1px;">
+                  Runs every 60 min • Auto-optimizes Technical SEO, AI Engine Citations, Edge AST Deltas & Bayesian Ad Guard
+                </span>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span id="hourly-last-run-badge" class="badge-pill success" style="font-size: 11px;">Last Run: Just Now</span>
+              <button class="btn btn-dark" id="btn-run-hourly-cycle-now" style="font-size: 12px; padding: 6px 14px;">
+                ▶ Run Hourly Cycle Now
+              </button>
+            </div>
+          </div>
+
+          <!-- Key Metric Cards -->
+          <div class="metric-grid">
+            <div class="card-metric">
+              <span class="metric-label">Traditional Search Clicks</span>
+              <div class="metric-value">18,420 <span class="metric-trend up">↑ +15.4%</span></div>
+              <span class="text-caption" style="color: var(--color-slate-gray);">Google Search Console & Bing</span>
+            </div>
+
+            <div class="card-metric">
+              <span class="metric-label">AI Engine Citations (SoV)</span>
+              <div class="metric-value" style="color: var(--color-signal-blue);">4,890 <span class="metric-trend up">↑ +42.8%</span></div>
+              <span class="text-caption" style="color: var(--color-slate-gray);">Perplexity, ChatGPT, Gemini</span>
+            </div>
+
+            <div class="card-metric">
+              <span class="metric-label">AXO Agent Readiness</span>
+              <div class="metric-value" style="color: var(--color-success);">98/100 <span class="badge-pill success">OPTIMAL</span></div>
+              <span class="text-caption" style="color: var(--color-slate-gray);">Zero Form Breakages</span>
+            </div>
+
+            <div class="card-metric">
+              <span class="metric-label">Attributed Pipeline</span>
+              <div class="metric-value" style="color: #0284c7;">$248,500 <span class="badge-pill" style="font-size: 10px;">MONTH 3</span></div>
+              <span class="text-caption" style="color: var(--color-slate-gray);">145 Inbound Matches</span>
+            </div>
+          </div>
+
+          <!-- Active Monitored Websites Panel -->
+          <div class="card-product" style="margin-bottom: 24px;">
+            <div class="mockup-header">
+              <div style="font-weight: 700; color: var(--color-ink-navy); font-size: 14px;">Connected Monitored Websites</div>
+              <span class="badge-pill success" id="status-db-engine">Database: Connected</span>
+            </div>
+            <div class="mockup-body" style="padding: 16px;">
+              <div id="website-list-container">
+                <div style="padding: 12px; text-align: center; color: var(--color-slate-gray); font-size: 14px;">Loading verified domains...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Audit Inspection Card -->
+          <div class="card-feature" id="audit-results-card">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px;">
+              <h3 class="text-subheading" style="font-size: 18px;">Automated Health & Machine Protocol Inspection</h3>
+              <span class="badge-pill success" id="audit-score-pill">Score: 94 / 100</span>
+            </div>
+            
+            <div class="audit-checklist-grid">
+              <div class="audit-item pass">
+                <span class="audit-icon">✓</span>
+                <div>
+                  <strong>JSON-LD Schema Markup</strong>
+                  <p>Organization, Product, and FAQ schema validated for rich snippets.</p>
+                </div>
+              </div>
+
+              <div class="audit-item pass">
+                <span class="audit-icon">✓</span>
+                <div>
+                  <strong>/llms.txt Protocol Active</strong>
+                  <p>Clean markdown outline available for Perplexity and Claude crawlers.</p>
+                </div>
+              </div>
+
+              <div class="audit-item pass">
+                <span class="audit-icon">✓</span>
+                <div>
+                  <strong>AI Crawler robots.txt Access</strong>
+                  <p>Google-Extended, GPTBot, and PerplexityBot permitted without CAPTCHA traps.</p>
+                </div>
+              </div>
+
+              <div class="audit-item pass">
+                <span class="audit-icon">✓</span>
+                <div>
+                  <strong>Edge Middleware Interception</strong>
+                  <p>Zero-CLS HTMLRewriter active via Cloudflare Worker integration.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- Tab 2: Generative Engine (AEO/GEO) -->
+        <section id="tab-geo" class="tab-pane">
+          <div class="card-feature">
+            <h3 class="text-subheading" style="font-size: 20px; margin-bottom: 8px;">Generative Engine Optimization (GEO) Radar</h3>
+            <p class="text-body" style="margin-bottom: 24px;">Tracks how frequently AI models recommend and cite your domain for high-intent search queries.</p>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div class="geo-prompt-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span class="badge-pill" style="font-size: 11px;">Perplexity AI</span>
+                  <span style="font-weight: 700; color: var(--color-success); font-size: 12px;">#1 Primary Source</span>
+                </div>
+                <div style="font-weight: 700; color: var(--color-ink-navy); font-size: 14px; margin-bottom: 4px;">"What is the best distributed database for fintech in 2026?"</div>
+                <div style="font-size: 13px; color: var(--color-slate-gray);">Cited via: Domain Homepage & Documentation Architecture Benchmark</div>
+              </div>
+
+              <div class="geo-prompt-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span class="badge-pill" style="font-size: 11px;">ChatGPT 4o</span>
+                  <span style="font-weight: 700; color: var(--color-success); font-size: 12px;">Rank 1 Citation</span>
+                </div>
+                <div style="font-weight: 700; color: var(--color-ink-navy); font-size: 14px; margin-bottom: 4px;">"Low-latency cloud databases that guarantee strict ACID compliance"</div>
+                <div style="font-size: 13px; color: var(--color-slate-gray);">Cited via: Whitepaper: "High-Throughput P99 Benchmark Review"</div>
+              </div>
+
+              <div class="geo-prompt-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span class="badge-pill" style="font-size: 11px;">Google AI Overviews</span>
+                  <span style="font-weight: 700; color: var(--color-success); font-size: 12px;">Featured Snippet Link</span>
+                </div>
+                <div style="font-weight: 700; color: var(--color-ink-navy); font-size: 14px; margin-bottom: 4px;">"Distributed SQL alternatives for high volume transaction workloads"</div>
+                <div style="font-size: 13px; color: var(--color-slate-gray);">Cited via: Structured Schema FAQ & Technical Blog Post</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 3: Agent Sandbox (AXO) -->
+        <section id="tab-axo" class="tab-pane">
+          <div class="card-feature">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <div>
+                <h3 class="text-subheading" style="font-size: 20px;">Agent Experience Optimization (AXO) Sandbox</h3>
+                <p class="text-body-sm">Simulates autonomous AI browser buyer missions to verify forms remain interactable.</p>
+              </div>
+              <button class="btn btn-dark" id="btn-run-dashboard-axo" style="font-size: 13px; padding: 8px 16px;">
+                Execute Live AXO Test
+              </button>
+            </div>
+
+            <div class="card-product" style="background: #081d33; padding: 16px; border-radius: 12px;">
+              <div id="axo-dashboard-logs" style="font-family: monospace; font-size: 13px; color: #d4e0ed; line-height: 1.8;">
+                <div>[0.10s] Chromium headless container initialized</div>
+                <div>[0.65s] Fetching /llms.txt and verifying schema: PASS (200 OK)</div>
+                <div>[1.20s] Scanning DOM for input[type='email']: PASS (#email-input)</div>
+                <div>[1.85s] Testing button[type='submit'] interactability: PASS (180ms latency)</div>
+                <div style="color: #10b981; font-weight: bold;">[2.95s] AXO Mission Completed. Zero machine buyer obstacles detected.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 4: Inbound Intent Interceptor Rules -->
+        <section id="tab-interceptor" class="tab-pane">
+          <div class="card-feature">
+            <h3 class="text-subheading" style="font-size: 20px; margin-bottom: 8px;">Dynamic Inbound Interceptor Overrides</h3>
+            <p class="text-body-sm" style="margin-bottom: 24px;">Configure real-time copy swaps based on which AI search engine or prompt referred the visitor.</p>
+
+            <form id="form-create-rule" style="background: var(--color-pebble); padding: 20px; border-radius: 12px; margin-bottom: 24px; border: 1px solid var(--color-hairline);">
+              <div style="font-weight: 700; color: var(--color-ink-navy); font-size: 14px; margin-bottom: 12px;">Create New Dynamic Intent Override:</div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                <div>
+                  <label class="text-caption" style="display: block; font-weight: 600; margin-bottom: 4px;">Target Element Selector</label>
+                  <input type="text" id="rule-selector" class="dash-input" placeholder="e.g. h1.hero-title" required>
+                </div>
+                <div>
+                  <label class="text-caption" style="display: block; font-weight: 600; margin-bottom: 4px;">Matched Intent Tag</label>
+                  <select id="rule-intent-tag" class="dash-input">
+                    <option value="enterprise_fintech_scalability">Enterprise Fintech Scalability</option>
+                    <option value="cloud_cost_optimization">Cloud Cost Optimization</option>
+                    <option value="developer_api_simplicity">Developer API Simplicity</option>
+                  </select>
+                </div>
+              </div>
+              <div style="margin-bottom: 12px;">
+                <label class="text-caption" style="display: block; font-weight: 600; margin-bottom: 4px;">Dynamic Replacement Copy</label>
+                <input type="text" id="rule-payload" class="dash-input" placeholder="e.g. The Low-Latency Distributed Database Built for Fintech..." required>
+              </div>
+              <button type="submit" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">Save & Deploy Rule to Edge</button>
+            </form>
+
+            <div id="rules-table-container">
+              <div style="color: var(--color-slate-gray); font-size: 13px;">Loading active rules...</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 5: Autonomous Leads CRM -->
+        <section id="tab-leads" class="tab-pane">
+          <div class="card-feature">
+            <h3 class="text-subheading" style="font-size: 20px; margin-bottom: 8px;">Autonomous Inbound Lead Pipeline</h3>
+            <p class="text-body-sm" style="margin-bottom: 24px;">Enriched B2B leads captured via intent-matched widgets and nurtured with context-grounded AI responses.</p>
+
+            <div class="leads-table-container">
+              <table class="leads-table" id="leads-table">
+                <thead>
+                  <tr>
+                    <th>Lead Name / Email</th>
+                    <th>Company & Scale</th>
+                    <th>Inbound Search Intent</th>
+                    <th>Lifecycle Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="leads-tbody">
+                  <tr>
+                    <td colspan="5" style="text-align: center; color: var(--color-slate-gray); padding: 24px;">Loading pipeline records...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 6: Integrations & Vault Settings -->
+        <section id="tab-settings" class="tab-pane">
+          <div class="card-feature">
+            <h3 class="text-subheading" style="font-size: 20px; margin-bottom: 8px;">Integrations & AES-256 Cryptographic Vault</h3>
+            <p class="text-body-sm" style="margin-bottom: 24px;">Manage one-click OAuth connections and third-party data providers.</p>
+
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <div class="integration-item">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="width: 36px; height: 36px; background: #fff; border: 1px solid var(--color-hairline); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #4285F4;">G</div>
+                  <div>
+                    <div style="font-weight: 700; color: var(--color-ink-navy); font-size: 14px;">Google Search Console & GA4</div>
+                    <div style="font-size: 12px; color: var(--color-slate-gray);">Syncs crawl health, impressions, clicks, and page indexing velocity</div>
+                  </div>
+                </div>
+                <span class="badge-pill success">Connected & Encrypted</span>
+              </div>
+
+              <div class="integration-item">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="width: 36px; height: 36px; background: var(--color-ink-navy); color: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold;">M</div>
+                  <div>
+                    <div style="font-weight: 700; color: var(--color-ink-navy); font-size: 14px;">Microsoft Bing Webmaster Tools</div>
+                    <div style="font-size: 12px; color: var(--color-slate-gray);">Indexes pages directly into Bing and Copilot search graphs</div>
+                  </div>
+                </div>
+                <span class="badge-pill success">Connected & Encrypted</span>
+              </div>
+
+              <div class="integration-item">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="width: 36px; height: 36px; background: #F38020; color: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold;">CF</div>
+                  <div>
+                    <div style="font-weight: 700; color: var(--color-ink-navy); font-size: 14px;">Cloudflare Edge Middleware (Zero-CLS)</div>
+                    <div style="font-size: 12px; color: var(--color-slate-gray);">Executes HTMLRewriter at edge nodes for instant intent personalizations</div>
+                  </div>
+                </div>
+                <span class="badge-pill success">Active on 285 PoPs</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 7: Auto-Remediation & Git PR Engine -->
+        <section id="tab-remediation" class="tab-pane">
+          <div class="card-feature">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <div>
+                <h3 class="text-subheading" style="font-size: 20px;">Automated Remediation & GitHub PR Publisher</h3>
+                <p class="text-body-sm">Automatically generates JSON-LD schema, /llms.txt protocols, and opens pull requests with tested code fixes.</p>
+              </div>
+              <button class="btn btn-primary" id="btn-create-auto-pr" style="font-size: 13px; padding: 8px 16px;">
+                ⚡ Open GitHub Pull Request
+              </button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+              <div style="background: var(--color-pebble); padding: 16px; border-radius: 12px; border: 1px solid var(--color-hairline);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <strong style="color: var(--color-ink-navy); font-size: 14px;">Schema.org JSON-LD Generator</strong>
+                  <button class="btn btn-dark" id="btn-gen-schema" style="font-size: 11px; padding: 4px 10px;">Generate</button>
+                </div>
+                <p style="font-size: 12px; color: var(--color-slate-gray); margin-bottom: 8px;">Builds verified Organization, SoftwareApplication, and FAQ schema graph.</p>
+                <div id="schema-preview-box" style="display: none; background: #081d33; color: #a6bbd1; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 11px; max-height: 180px; overflow-y: auto;"></div>
+              </div>
+
+              <div style="background: var(--color-pebble); padding: 16px; border-radius: 12px; border: 1px solid var(--color-hairline);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <strong style="color: var(--color-ink-navy); font-size: 14px;">/llms.txt Machine Protocol</strong>
+                  <button class="btn btn-dark" id="btn-gen-llmstxt" style="font-size: 11px; padding: 4px 10px;">Generate</button>
+                </div>
+                <p style="font-size: 12px; color: var(--color-slate-gray); margin-bottom: 8px;">Generates clean markdown model mapping architecture, pricing, and WebMCP endpoints.</p>
+                <div id="llmstxt-preview-box" style="display: none; background: #081d33; color: #a6bbd1; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 11px; max-height: 180px; overflow-y: auto;"></div>
+              </div>
+            </div>
+
+            <!-- PR Result Block -->
+            <div id="pr-result-container" style="display: none; background: var(--color-pebble); border: 1px solid var(--color-hairline); border-radius: 12px; padding: 20px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="badge-pill success">PR Created</span>
+                  <strong id="pr-title" style="color: var(--color-ink-navy); font-size: 14px;"></strong>
+                </div>
+                <a href="#" id="pr-link" target="_blank" class="ghost-link" style="font-size: 13px;">View on GitHub ↗</a>
+              </div>
+              <div id="pr-diff-viewer" style="background: #081d33; padding: 14px; border-radius: 8px; font-family: monospace; font-size: 12px; line-height: 1.6; color: #d4e0ed;"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 8: Vector Knowledge Memory -->
+        <section id="tab-vectors" class="tab-pane">
+          <div class="card-feature">
+            <h3 class="text-subheading" style="font-size: 20px; margin-bottom: 8px;">Unified Vector Knowledge Base (pgvector HNSW)</h3>
+            <p class="text-body-sm" style="margin-bottom: 24px;">Stores 1536-dimensional embeddings of your website. Powers the autonomous sales SDR with verified facts.</p>
+
+            <!-- Vector Search Sandbox -->
+            <div style="background: var(--color-pebble); padding: 20px; border-radius: 12px; margin-bottom: 24px; border: 1px solid var(--color-hairline);">
+              <div style="font-weight: 700; color: var(--color-ink-navy); font-size: 14px; margin-bottom: 12px;">Test Cosine Retrieval Query:</div>
+              <form id="form-query-vector" style="display: flex; gap: 8px; margin-bottom: 12px;">
+                <input type="text" id="vector-query-input" class="dash-input" placeholder="e.g. Does fintechdb guarantee SOC2 and high throughput?" style="flex: 1;" required>
+                <button type="submit" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">Search Memory</button>
+              </form>
+              <div id="vector-results-container" style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="font-size: 12px; color: var(--color-slate-gray);">Enter a query above to see top matching website vectors.</div>
+              </div>
+            </div>
+
+            <!-- Ingest New Content -->
+            <div style="background: var(--color-paper); padding: 20px; border-radius: 12px; border: 1px solid var(--color-hairline);">
+              <div style="font-weight: 700; color: var(--color-ink-navy); font-size: 14px; margin-bottom: 8px;">Vectorize New Knowledge Chunk:</div>
+              <form id="form-ingest-vector">
+                <textarea id="vector-raw-content" class="dash-input" placeholder="Paste product specifications, pricing updates, or FAQ copy..." style="height: 80px; resize: none; margin-bottom: 10px;" required></textarea>
+                <button type="submit" class="btn btn-dark" style="font-size: 13px; padding: 8px 16px;">Chunk & Store in pgvector</button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab: Co-Citation Topology & Synthetic Prompt Arrays -->
+        <section id="tab-cocitation" class="tab-pane">
+          <div class="card-feature" style="margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+              <div>
+                <h3 class="text-subheading" style="font-size: 20px; color: var(--color-ink-navy); margin-bottom: 4px;">Co-Citation Topology & LLM Market Matrix</h3>
+                <p class="text-body-sm" style="color: var(--color-slate-gray);">Interactive D3 physical force graph mapping mutual competitor positioning across Perplexity, ChatGPT, and Gemini.</p>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-ghost" id="btn-refresh-topology" style="font-size: 13px; padding: 6px 12px; border: 1px solid var(--color-hairline);">↺ Refresh Graph</button>
+                <button class="btn btn-primary" id="btn-trigger-ai-sweep" style="font-size: 13px; padding: 6px 14px;">Trigger AI Engine Sweep</button>
+              </div>
+            </div>
+
+            <!-- D3 Interactive Graph Container -->
+            <div style="background: var(--color-pebble); border: 1px solid var(--color-hairline); border-radius: var(--radius-cards); padding: 16px; position: relative;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 16px; font-size: 12px; font-weight: 600;">
+                  <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 12px; height: 12px; border-radius: 50%; background: #006bff; display: inline-block;"></span> Your Brand (Origin Hub)</span>
+                  <span style="display: flex; align-items: center; gap: 6px;"><span style="width: 12px; height: 12px; border-radius: 50%; background: #0b3558; display: inline-block;"></span> Emerging Competitors</span>
+                  <span style="color: var(--color-slate-gray); font-size: 11px;">(Line weight indicates mutual citation proximity threat)</span>
+                </div>
+                <div style="font-size: 11px; color: var(--color-slate-gray); font-family: monospace;">Scroll to Zoom • Drag to Inspect Nodes</div>
+              </div>
+              
+              <div id="cocitation-graph-container" style="width: 100%; height: 380px; background: #ffffff; border-radius: 8px; border: 1px solid var(--color-hairline); overflow: hidden; position: relative;">
+                <svg id="cocitation-svg" width="100%" height="100%" style="cursor: grab;"></svg>
+                <div id="graph-loading-indicator" style="display: none; position: absolute; inset: 0; background: rgba(255,255,255,0.7); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--color-ink-navy);">Simulating Physics Topology...</div>
+              </div>
+            </div>
+
+            <!-- Synthetic Prompt Arrays Generator -->
+            <div style="margin-top: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div style="background: var(--color-paper); padding: 20px; border-radius: var(--radius-cards); border: 1px solid var(--color-hairline); box-shadow: var(--shadow-sm);">
+                <strong style="color: var(--color-ink-navy); font-size: 14px; display: block; margin-bottom: 8px;">Automated Synthetic Prompt Compiler</strong>
+                <p style="font-size: 12px; color: var(--color-slate-gray); margin-bottom: 12px;">Permutes natural intent vectors x commercial keywords x geographic hubs to sweep AI answer engines.</p>
+                <form id="form-compile-prompts">
+                  <div style="margin-bottom: 10px;">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--color-ink-navy); text-transform: uppercase;">Core Keywords (comma separated)</label>
+                    <input type="text" id="input-compiler-keywords" class="dash-input" value="distributed SQL database, fintech real-time analytics, ultra low latency ledger" style="margin-top: 4px; font-size: 12px;">
+                  </div>
+                  <div style="margin-bottom: 12px;">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--color-ink-navy); text-transform: uppercase;">Target Markets</label>
+                    <input type="text" id="input-compiler-locations" class="dash-input" value="North America, New York Financial District, London & EMEA, Singapore APAC" style="margin-top: 4px; font-size: 12px;">
+                  </div>
+                  <button type="submit" class="btn btn-dark" style="font-size: 13px; padding: 8px 16px;">Compile Synthetic Prompt Array</button>
+                </form>
+                <div id="compiler-stats-box" style="margin-top: 12px; font-size: 12px; color: var(--color-signal-blue); font-weight: 600;"></div>
+              </div>
+
+              <!-- Co-Citation TimescaleDB Matrix Feed -->
+              <div style="background: var(--color-paper); padding: 20px; border-radius: var(--radius-cards); border: 1px solid var(--color-hairline); box-shadow: var(--shadow-sm);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <strong style="color: var(--color-ink-navy); font-size: 14px;">Live TimescaleDB Co-Citation Feed</strong>
+                  <span class="badge-pill" style="font-size: 10px;">hypertable: co_citation_matrix_ts</span>
+                </div>
+                <div id="cocitation-matrix-feed" style="max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; font-size: 12px;">
+                  <!-- Dynamic rows -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab: Programmatic Real-Time Ad Guard -->
+        <section id="tab-adguard" class="tab-pane">
+          <div class="card-feature" style="margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+              <div>
+                <h3 class="text-subheading" style="font-size: 20px; color: var(--color-ink-navy); margin-bottom: 4px;">Programmatic Real-Time Ad Guard (Smart RTB)</h3>
+                <p class="text-body-sm" style="color: var(--color-slate-gray);">Autonomous webhook router that mutates Google Ads PPC bids and Meta Retargeting budgets when AI Share of Voice (SoV) drops below safety threshold (40.0%).</p>
+              </div>
+              <span class="badge-pill success" style="font-size: 12px; padding: 4px 12px;">🛡️ Real-Time Bidding Active</span>
+            </div>
+
+            <!-- Guard Threshold Status Overview -->
+            <div class="metric-grid" style="margin-bottom: 24px;">
+              <div class="card-metric">
+                <span class="metric-label">Target Visibility Floor</span>
+                <div class="metric-value">40.0% <span class="badge-pill" style="font-size: 10px;">SAFETY LIMIT</span></div>
+                <span class="text-caption" style="color: var(--color-slate-gray);">Threshold below which PPC triggers</span>
+              </div>
+              <div class="card-metric">
+                <span class="metric-label">Current Monitored SoV</span>
+                <div class="metric-value" style="color: var(--color-signal-blue);" id="adguard-current-sov">34.5% <span class="metric-trend down">↓ Alert Active</span></div>
+                <span class="text-caption" style="color: var(--color-slate-gray);">Keyword: 'fintech compliance db'</span>
+              </div>
+              <div class="card-metric">
+                <span class="metric-label">Google Ads Campaign</span>
+                <div class="metric-value" style="color: var(--color-success);">ENABLED <span class="badge-pill success">MUTATED</span></div>
+                <span class="text-caption" style="color: var(--color-slate-gray);">Budget: +$250/day dynamic boost</span>
+              </div>
+              <div class="card-metric">
+                <span class="metric-label">Meta Graph Retargeting</span>
+                <div class="metric-value" style="color: #0284c7;">Active <span class="badge-pill" style="font-size: 10px;">ZERO-CLICK</span></div>
+                <span class="text-caption" style="color: var(--color-slate-gray);">Custom AI Visitor Audience</span>
+              </div>
+            </div>
+
+            <!-- Ad Guard Interactive Simulator -->
+            <div style="background: var(--color-pebble); border: 1px solid var(--color-hairline); border-radius: var(--radius-cards); padding: 20px; margin-bottom: 24px;">
+              <strong style="color: var(--color-ink-navy); font-size: 14px; display: block; margin-bottom: 8px;">Simulate AI Search Visibility Drop & Inspect Dynamic Mutation:</strong>
+              <form id="form-test-adguard" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px;">
+                  <label style="font-size: 11px; font-weight: 700; color: var(--color-ink-navy); text-transform: uppercase;">Keyword Topic</label>
+                  <input type="text" id="adguard-sim-topic" class="dash-input" value="low latency fintech database" style="margin-top: 4px;">
+                </div>
+                <div style="width: 140px;">
+                  <label style="font-size: 11px; font-weight: 700; color: var(--color-ink-navy); text-transform: uppercase;">Simulated SoV %</label>
+                  <input type="number" id="adguard-sim-sov" class="dash-input" value="32.5" step="0.5" style="margin-top: 4px;">
+                </div>
+                <button type="submit" class="btn btn-primary" style="font-size: 13px; padding: 10px 18px;">Evaluate & Trigger Remedial Ads</button>
+              </form>
+
+              <div id="adguard-mutation-result" style="display: none; margin-top: 16px; background: #081d33; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 11px; color: #d4e0ed; max-height: 220px; overflow-y: auto;"></div>
+            </div>
+
+            <!-- Live Sales Battlecard CRM Enrichment Test -->
+            <div style="background: var(--color-paper); border: 1px solid var(--color-hairline); border-radius: var(--radius-cards); padding: 20px; box-shadow: var(--shadow-sm);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong style="color: var(--color-ink-navy); font-size: 14px;">CRM Battlecard Autonomous Enrichment (Module 4)</strong>
+                <span class="badge-pill" style="font-size: 10px;">HubSpot & Salesforce Ready</span>
+              </div>
+              <p style="font-size: 12px; color: var(--color-slate-gray); margin-bottom: 12px;">Whenever a zero-click AI lead converts, Aegis queries co-citation matrices to patch tailored competitive battlecards straight into their contact record.</p>
+              <form id="form-test-battlecard" style="display: flex; gap: 10px;">
+                <input type="email" id="battlecard-lead-email" class="dash-input" value="alex.jones@enterprise-buyer.com" style="flex: 1;" placeholder="Lead Email">
+                <input type="text" id="battlecard-lead-intent" class="dash-input" value="low latency fintech database" style="flex: 1;" placeholder="Acquisition Topic">
+                <button type="submit" class="btn btn-dark" style="font-size: 13px; padding: 8px 16px;">Generate CRM Battlecard</button>
+              </form>
+              <div id="battlecard-preview-box" style="display: none; margin-top: 12px; background: var(--color-pebble); padding: 14px; border-radius: 8px; border: 1px solid var(--color-hairline); font-size: 12px; line-height: 1.6; white-space: pre-wrap; font-family: monospace; color: var(--color-ink-navy);"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab: Native CMS & Storefront Sync -->
+        <section id="tab-cmssync" class="tab-pane">
+          <div class="card-feature" style="margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+              <div>
+                <h3 class="text-subheading" style="font-size: 20px; color: var(--color-ink-navy); margin-bottom: 4px;">Native CMS & Storefront Sync Infrastructure</h3>
+                <p class="text-body-sm" style="color: var(--color-slate-gray);">Bypasses unstable headless HTML publishing by pushing Abstract AST Deltas and native Shopify Metafields [2.0 framework].</p>
+              </div>
+              <span class="badge-pill success" style="font-size: 12px;">Zero Layout Shift (Zero-CLS)</span>
+            </div>
+
+            <!-- Architecture Comparison Cards -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+              <div style="background: var(--color-pebble); padding: 16px; border-radius: 12px; border: 1px solid var(--color-hairline);">
+                <div style="font-weight: 700; color: #dc2626; font-size: 13px; margin-bottom: 6px;">✕ Competitor Headless REST Strategy</div>
+                <p style="font-size: 12px; color: var(--color-slate-gray); line-height: 1.5;">Pushes monolithic static HTML strings into theme files via WordPress/Shopify REST APIs. Causes broken CSS layouts, theme update crashes, and heavy layout shift penalties.</p>
+              </div>
+              <div style="background: var(--color-badge-bg); padding: 16px; border-radius: 12px; border: 1px solid #bfdbfe;">
+                <div style="font-weight: 700; color: var(--color-signal-blue); font-size: 13px; margin-bottom: 6px;">✓ Advanced Aegis Native Sync Strategy</div>
+                <p style="font-size: 12px; color: var(--color-ink-navy); line-height: 1.5;">Emits abstract AST deltas. Injects GEO copy and Schema JSON directly into database Metafields and edge middleware. Layout files remain 100% untouched.</p>
+              </div>
+            </div>
+
+            <!-- Shopify GraphQL Sync Tester -->
+            <div style="background: var(--color-paper); border: 1px solid var(--color-hairline); border-radius: var(--radius-cards); padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow-sm);">
+              <strong style="color: var(--color-ink-navy); font-size: 14px; display: block; margin-bottom: 6px;">Shopify Admin GraphQL Metafields Upsert Dispatcher</strong>
+              <p style="font-size: 12px; color: var(--color-slate-gray); margin-bottom: 12px;">Executes <code style="font-size: 11px;">metafieldsSet</code> mutation to write into <code style="font-size: 11px;">product.metafields.aegis_growth.geo_optimized_copy</code>.</p>
+              <form id="form-shopify-sync">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
+                  <div>
+                    <label style="font-size: 11px; font-weight: 700; color: var(--color-ink-navy); text-transform: uppercase;">Shop Domain</label>
+                    <input type="text" id="shopify-shop-domain" class="dash-input" value="acme-fintech.myshopify.com" style="margin-top: 4px;">
+                  </div>
+                  <div>
+                    <label style="font-size: 11px; font-weight: 700; color: var(--color-ink-navy); text-transform: uppercase;">Product GraphQL Node ID</label>
+                    <input type="text" id="shopify-product-id" class="dash-input" value="gid://shopify/Product/89211029381" style="margin-top: 4px;">
+                  </div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                  <label style="font-size: 11px; font-weight: 700; color: var(--color-ink-navy); text-transform: uppercase;">AI-Search Optimized Copy Payload</label>
+                  <textarea id="shopify-copy-payload" class="dash-input" style="height: 60px; margin-top: 4px; resize: none;">Engineered for high-throughput capital markets compliance. Sub-5ms global ACID replication with zero-overhead indexing.</textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="font-size: 13px; padding: 8px 18px;">Push Metafields via Admin GraphQL</button>
+              </form>
+              <div id="shopify-sync-result" style="display: none; margin-top: 12px; background: var(--color-pebble); padding: 12px; border-radius: 8px; font-family: monospace; font-size: 11px; color: var(--color-ink-navy);"></div>
+            </div>
+
+            <!-- AST Delta & Edge Export Controls -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div style="background: var(--color-paper); padding: 20px; border-radius: var(--radius-cards); border: 1px solid var(--color-hairline); box-shadow: var(--shadow-sm);">
+                <strong style="color: var(--color-ink-navy); font-size: 14px; display: block; margin-bottom: 6px;">WordPress Plugin AST Sync Handler</strong>
+                <p style="font-size: 12px; color: var(--color-slate-gray); margin-bottom: 12px;">Hooks into native WP core <code style="font-size: 11px;">wp_insert_post_data</code> with HashiCorp Vault HMAC.</p>
+                <button class="btn btn-dark" id="btn-simulate-wp-ast" style="font-size: 12px; padding: 6px 14px;">Dispatch AST to WordPress</button>
+                <div id="wp-ast-result" style="display: none; margin-top: 10px; font-size: 11px; font-family: monospace; color: var(--color-success); font-weight: 600;"></div>
+              </div>
+
+              <div style="background: var(--color-paper); padding: 20px; border-radius: var(--radius-cards); border: 1px solid var(--color-hairline); box-shadow: var(--shadow-sm);">
+                <strong style="color: var(--color-ink-navy); font-size: 14px; display: block; margin-bottom: 6px;">Cloudflare / Next.js Edge Middleware Cache</strong>
+                <p style="font-size: 12px; color: var(--color-slate-gray); margin-bottom: 12px;">Exports optimization variants straight to edge KV for sub-5ms HTMLRewriter interception.</p>
+                <button class="btn btn-ghost" id="btn-export-edge-profile" style="font-size: 12px; padding: 6px 14px; border: 1px solid var(--color-hairline);">Export Profile to Edge KV</button>
+                <div id="edge-export-result" style="display: none; margin-top: 10px; font-size: 11px; font-family: monospace; color: var(--color-signal-blue); font-weight: 600;"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab: Billing & Usage Quotas -->
+        <section id="tab-billing" class="tab-pane">
+          <div class="card-feature" style="margin-bottom: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+              <div>
+                <h3 class="text-subheading" style="font-size: 20px; color: var(--color-ink-navy); margin-bottom: 4px;">SaaS Billing & Monthly Quota Management</h3>
+                <p class="text-body-sm" style="color: var(--color-slate-gray);">Multi-tenant subscription tiers, automated Stripe webhook synchronization, and feature entitlement gates.</p>
+              </div>
+              <span class="badge-pill success" style="font-size: 12px; padding: 4px 12px;">Active Subscription</span>
+            </div>
+
+            <!-- Tier Cards Grid -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 24px;">
+              <div style="background: var(--color-paper); border: 1px solid var(--color-hairline); border-radius: var(--radius-cards); padding: 24px; box-shadow: var(--shadow-sm);">
+                <div style="font-size: 13px; font-weight: 700; color: var(--color-slate-gray); text-transform: uppercase;">Growth Tier</div>
+                <div style="font-size: 28px; font-weight: 800; color: var(--color-ink-navy); margin: 8px 0;">$499<span style="font-size: 14px; font-weight: 500; color: var(--color-slate-gray);">/mo</span></div>
+                <ul style="font-size: 12px; color: var(--color-ink-navy); line-height: 1.8; padding-left: 18px; margin-bottom: 16px;">
+                  <li>1 Monitored Website</li>
+                  <li>500 Monthly AI Sweeps</li>
+                  <li>Technical & Schema Engine</li>
+                  <li style="color: var(--color-slate-gray); text-decoration: line-through;">AXO Agent Sandbox</li>
+                </ul>
+                <button class="btn btn-ghost" style="width: 100%; font-size: 13px; border: 1px solid var(--color-hairline);">Downgrade</button>
+              </div>
+
+              <div style="background: var(--color-paper); border: 2px solid var(--color-signal-blue); border-radius: var(--radius-cards); padding: 24px; box-shadow: var(--shadow-md); position: relative;">
+                <span class="badge-pill" style="position: absolute; top: -10px; right: 20px; background: var(--color-signal-blue); color: #ffffff; font-size: 10px;">CURRENT PLAN</span>
+                <div style="font-size: 13px; font-weight: 700; color: var(--color-signal-blue); text-transform: uppercase;">Scale Tier</div>
+                <div style="font-size: 28px; font-weight: 800; color: var(--color-ink-navy); margin: 8px 0;">$1,499<span style="font-size: 14px; font-weight: 500; color: var(--color-slate-gray);">/mo</span></div>
+                <ul style="font-size: 12px; color: var(--color-ink-navy); line-height: 1.8; padding-left: 18px; margin-bottom: 16px;">
+                  <li>5 Monitored Websites</li>
+                  <li>5,000 Monthly AI Sweeps</li>
+                  <li>AXO Agent Sandbox Active</li>
+                  <li>Real-Time Ad Position Guard</li>
+                  <li>Shopify & WP Native Sync</li>
+                </ul>
+                <button class="btn btn-primary" style="width: 100%; font-size: 13px;">Manage Stripe Billing</button>
+              </div>
+
+              <div style="background: var(--color-paper); border: 1px solid var(--color-hairline); border-radius: var(--radius-cards); padding: 24px; box-shadow: var(--shadow-sm);">
+                <div style="font-size: 13px; font-weight: 700; color: var(--color-slate-gray); text-transform: uppercase;">Enterprise OS</div>
+                <div style="font-size: 28px; font-weight: 800; color: var(--color-ink-navy); margin: 8px 0;">$4,999<span style="font-size: 14px; font-weight: 500; color: var(--color-slate-gray);">/mo</span></div>
+                <ul style="font-size: 12px; color: var(--color-ink-navy); line-height: 1.8; padding-left: 18px; margin-bottom: 16px;">
+                  <li>50 Domain Clusters</li>
+                  <li>100,000 Monthly Sweeps</li>
+                  <li>Co-Citation Matrix Hypertable</li>
+                  <li>Sub-5ms Cloudflare Workers</li>
+                  <li>24/7 Dedicated SLA & Vault</li>
+                </ul>
+                <button class="btn btn-dark" style="width: 100%; font-size: 13px;">Upgrade to Enterprise</button>
+              </div>
+            </div>
+
+            <!-- Current Quota Usage Bar -->
+            <div style="background: var(--color-pebble); padding: 20px; border-radius: var(--radius-cards); border: 1px solid var(--color-hairline);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong style="color: var(--color-ink-navy); font-size: 14px;">Monthly Scraping Quota (Calendar Period)</strong>
+                <span style="font-size: 13px; font-weight: 700; color: var(--color-ink-navy);">842 / 5,000 Sweeps (17%)</span>
+              </div>
+              <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-bottom: 12px;">
+                <div style="width: 17%; height: 100%; background: var(--color-signal-blue);"></div>
+              </div>
+              <p style="font-size: 12px; color: var(--color-slate-gray);">Quota resets automatically on the 1st of each month. Enterprise burst capacity enabled.</p>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  <!-- Lead 2-Way Conversation Modal Drawer -->
+  <div id="lead-modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(11, 53, 88, 0.4); backdrop-filter: blur(4px); z-index: 200; align-items: center; justify-content: center;">
+    <div style="background: var(--color-paper); width: 90%; max-width: 650px; border-radius: var(--radius-cards); box-shadow: var(--shadow-product); border: 1px solid var(--color-hairline); display: flex; flex-direction: column; max-height: 85vh; overflow: hidden;">
+      
+      <!-- Modal Header -->
+      <div style="padding: 20px 24px; border-bottom: 1px solid var(--color-hairline); display: flex; justify-content: space-between; align-items: center; background: var(--color-pebble);">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <strong id="modal-lead-name" style="font-size: 16px; color: var(--color-ink-navy);">Sarah Chen</strong>
+            <span class="badge-pill success" id="modal-lead-badge">Meeting Booked</span>
+          </div>
+          <div id="modal-lead-sub" style="font-size: 12px; color: var(--color-slate-gray); margin-top: 2px;">sarah.c@goldman-tech.com • Goldman Tech Capital</div>
+        </div>
+        <button id="btn-close-lead-modal" style="background: transparent; border: none; font-size: 20px; color: var(--color-slate-gray); cursor: pointer;">✕</button>
+      </div>
+
+      <!-- Thread Messages Scroll Body -->
+      <div id="modal-chat-body" style="padding: 24px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 16px; background: var(--color-cloud);">
+        <!-- Messages rendered dynamically -->
+      </div>
+
+      <!-- Chat Reply Box -->
+      <div style="padding: 16px 20px; border-top: 1px solid var(--color-hairline); background: var(--color-paper);">
+        <form id="form-send-lead-reply" style="display: flex; gap: 8px;">
+          <input type="text" id="input-lead-reply" class="dash-input" placeholder="Simulate lead message: 'What are your SLA guarantees?' or 'Need custom NDA'" style="flex: 1;" required>
+          <button type="submit" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">Send Message</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

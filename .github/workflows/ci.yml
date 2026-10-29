@@ -1,0 +1,46 @@
+name: Aegis Growth OS — Continuous Integration (CI)
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-verify:
+    name: Core Test Suite & Subsystem Verification
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [ 18.x, 20.x, 22.x ]
+
+    steps:
+      - name: Checkout Source Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Cryptographic, Chunker, AXO & Enterprise Tests
+        run: node tests/platform.test.js
+        env:
+          NODE_ENV: test
+          AEGIS_MASTER_VAULT_KEY: e74f07a4b69d1234567890abcdef1234567890abcdef1234567890abcdef1234
+
+      - name: Verify Edge Worker Code Integrity
+        run: |
+          node -c edge/cloudflare-worker.js
+          node -c cdn/aegis-interceptor.js
+
+      - name: Database Schema & Migration Syntax Check
+        run: |
+          grep -q "competitor_profiles" backend/database/migrations_v2_advanced.sql
+          grep -q "co_citation_matrix_ts" backend/database/migrations_v2_advanced.sql
+          echo "Database migration definitions verified."

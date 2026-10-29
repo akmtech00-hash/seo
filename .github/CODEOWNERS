@@ -1,0 +1,6 @@
+# Aegis Growth OS Codeowners
+* @aegis-growth/core-architects
+/backend/ @aegis-growth/backend-engineers
+/edge/ @aegis-growth/edge-infrastructure
+/cms/ @aegis-growth/cms-integrations
+/docs/ @aegis-growth/tech-writers

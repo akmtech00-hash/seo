@@ -1,0 +1,10 @@
+{% comment %}
+  Aegis Growth OS - Structural Schema.org Inbound Ingestion Layer
+  Injects dynamically updated metadata maps without affecting visual template rendering.
+{% endcomment %}
+
+{% if template.name == 'product' and product.metafields.aegis_growth.agent_structured_schema %}
+  <script type="application/ld+json" id="aegis-agent-schema-block">
+    {{ product.metafields.aegis_growth.agent_structured_schema.value }}
+  </script>
+{% endif %}

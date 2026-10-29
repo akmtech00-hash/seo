@@ -1,0 +1,42 @@
+name: Aegis Growth OS — Autonomous Hourly Marketing & SEO Enhancer
+
+on:
+  schedule:
+    # Runs automatically at minute 0 of every hour (24 times a day)
+    - cron: '0 * * * *'
+  workflow_dispatch: # Allows manual on-demand execution anytime from the Actions tab
+
+jobs:
+  hourly-enhancement-cycle:
+    name: Run Autonomous 60-Minute SEO & Marketing Optimization
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Execute Autonomous Hourly Optimization Cycle
+        run: |
+          node -e "
+            const hourlyService = require('./backend/services/hourly_enhancement_service');
+            hourlyService.executeHourlyEnhancementCycle('github_actions_hourly_cron')
+              .then(res => {
+                console.log('Hourly cycle completed successfully:', JSON.stringify(res.summary, null, 2));
+              })
+              .catch(err => {
+                console.error('Hourly cycle failed:', err.message);
+                process.exit(1);
+              });
+          "
+        env:
+          NODE_ENV: production
+          AEGIS_MASTER_VAULT_KEY: ${{ secrets.AEGIS_MASTER_VAULT_KEY || 'development_mock_key_2026' }}

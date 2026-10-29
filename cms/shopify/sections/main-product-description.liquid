@@ -1,0 +1,18 @@
+<div class="product__description-container">
+  {% if product.metafields.aegis_growth.geo_optimized_copy %}
+    <!-- Aegis Active GEO/AEO Content Variation Dynamic Layer -->
+    <div class="aegis-optimized-content-wrapper" style="position: relative; border-left: 2px solid #6366f1; padding-left: 1rem;">
+      <span class="aegis-badge" style="font-size: 10px; font-family: monospace; color: #6366f1; text-transform: uppercase; font-weight: bold; display: block; margin-bottom: 0.5rem;">
+        ✦ AI-Search Verified Inbound Copy
+      </span>
+      <div class="prose prose-slate text-slate-300">
+        {{ product.metafields.aegis_growth.geo_optimized_copy.value }}
+      </div>
+    </div>
+  {% else %}
+    <!-- Fallback Core Store Theme Description Block -->
+    <div class="product__description-fallback">
+      {{ product.description }}
+    </div>
+  {% endif %}
+</div>

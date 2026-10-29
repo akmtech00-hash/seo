@@ -1,0 +1,63 @@
+version: '3.8'
+
+networks:
+  aegis_network:
+    driver: bridge
+    name: aegis_network
+
+volumes:
+  timescale_data:
+    driver: local
+  redis_data:
+    driver: local
+
+services:
+  # 1. PostgreSQL 15 with TimescaleDB & pgvector
+  aegis_datastore:
+    image: timescale/timescaledb:latest-pg15
+    container_name: aegis_datastore_srv
+    environment:
+      POSTGRES_DB: aegis_growth_platform
+      POSTGRES_USER: aegis_db_admin
+      POSTGRES_PASSWORD: production_secure_db_phrase_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+      - ./backend/database/migrations.sql:/docker-entrypoint-initdb.d/01_migrations.sql
+    networks:
+      - aegis_network
+    restart: always
+
+  # 2. Redis Message Broker & Cache
+  aegis_broker:
+    image: redis:7.2-alpine
+    container_name: aegis_broker_srv
+    command: redis-server --appendonly yes --requirepass production_secure_redis_phrase_2026
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - aegis_network
+    restart: always
+
+  # 3. Aegis API Gateway & Web Application Server
+  aegis_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aegis_api_server
+    environment:
+      - PORT=4000
+      - DATABASE_URL=postgresql://aegis_db_admin:production_secure_db_phrase_2026@aegis_datastore:5432/aegis_growth_platform
+      - REDIS_URL=redis://:production_secure_redis_phrase_2026@aegis_broker:6379/0
+      - AEGIS_MASTER_VAULT_KEY=dGhpcyBpcyBhIHNlY3VyZSAzMi1ieXRlIG1hc3RlciBrZXk=
+    ports:
+      - "4000:4000"
+    depends_on:
+      - aegis_datastore
+      - aegis_broker
+    networks:
+      - aegis_network
+    restart: always
