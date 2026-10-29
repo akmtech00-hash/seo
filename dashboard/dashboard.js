@@ -8,14 +8,38 @@ document.addEventListener('DOMContentLoaded', () => {
   const API_BASE = '/api/v1';
 
   // =========================================================================
-  // 1. TAB NAVIGATION
+  // TOAST NOTIFICATION SYSTEM
+  // =========================================================================
+  function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast-message ${type}`;
+    const icon = type === 'success' ? '✓ ' : (type === 'error' ? '✕ ' : 'ℹ ');
+    toast.textContent = icon + message;
+
+    container.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(12px)';
+      toast.style.transition = 'all 0.2s ease';
+      setTimeout(() => toast.remove(), 220);
+    }, 3600);
+  }
+
+  // =========================================================================
+  // 1. TAB NAVIGATION & DYNAMIC BREADCRUMB
   // =========================================================================
   const navItems = document.querySelectorAll('.nav-item[data-tab]');
   const tabPanes = document.querySelectorAll('.tab-pane');
+  const topbarTitle = document.getElementById('topbar-page-title');
+  const topbarBreadcrumb = document.getElementById('topbar-current-breadcrumb');
 
   navItems.forEach(item => {
     item.addEventListener('click', () => {
       const targetTabId = item.getAttribute('data-tab');
+      const tabLabel = item.querySelector('span')?.textContent || 'Overview';
 
       navItems.forEach(n => n.classList.remove('active'));
       tabPanes.forEach(p => p.classList.remove('active'));
@@ -23,6 +47,9 @@ document.addEventListener('DOMContentLoaded', () => {
       item.classList.add('active');
       const targetPane = document.getElementById(targetTabId);
       if (targetPane) targetPane.classList.add('active');
+
+      if (topbarTitle) topbarTitle.textContent = tabLabel;
+      if (topbarBreadcrumb) topbarBreadcrumb.textContent = tabLabel;
     });
   });
 
@@ -120,10 +147,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const scorePill = document.getElementById('audit-score-pill');
         if (scorePill) scorePill.textContent = `Score: ${data.audit.healthScore} / 100`;
 
-        alert(`✅ Audit Complete for ${domain}!\nHealth Score: ${data.audit.healthScore}/100\nLatency: ${data.audit.latencyMs}ms\nSchema: Valid\n/llms.txt: Active`);
+        showToast(`Audit Complete for ${domain}! Health: ${data.audit.healthScore}/100, Latency: ${data.audit.latencyMs}ms`, 'success');
       }
     } catch (err) {
-      alert(`Audit error: ${err.message}`);
+      showToast(`Audit error: ${err.message}`, 'error');
     } finally {
       if (btn) {
         btn.disabled = false;
@@ -146,13 +173,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const data = await res.json();
         if (data.success) {
-          alert(`Domain ${domain} connected! Launching baseline audit.`);
+          showToast(`Domain ${domain} connected! Launching baseline audit.`, 'success');
           await refreshWebsites();
         } else {
-          alert(data.error);
+          showToast(data.error, 'error');
         }
       } catch (err) {
-        alert(err.message);
+        showToast(err.message, 'error');
       }
     }
   });
@@ -271,13 +298,13 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const data = await res.json();
       if (data.success) {
-        alert('Rule saved and pushed to Edge Middleware!');
+        showToast('Rule saved and pushed to Edge Middleware!', 'success');
         document.getElementById('rule-selector').value = '';
         document.getElementById('rule-payload').value = '';
         await refreshRules();
       }
     } catch (err) {
-      alert(`Error saving rule: ${err.message}`);
+      showToast(`Error saving rule: ${err.message}`, 'error');
     }
   });
 
@@ -408,7 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnCreatePR.textContent = "PR Opened ✓";
       }
     } catch (err) {
-      alert(`PR creation failed: ${err.message}`);
+      showToast(`PR creation failed: ${err.message}`, 'error');
       btnCreatePR.disabled = false;
       btnCreatePR.textContent = "⚡ Open GitHub Pull Request";
     }
@@ -466,11 +493,11 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const data = await res.json();
       if (data.success) {
-        alert(`Success! Generated ${data.chunksCreated} vector embeddings and stored in pgvector.`);
+        showToast(`Success! Generated ${data.chunksCreated} vector embeddings and stored in pgvector.`, 'success');
         vectorRawContent.value = '';
       }
     } catch (err) {
-      alert(`Ingestion error: ${err.message}`);
+      showToast(`Ingestion error: ${err.message}`, 'error');
     }
   });
 
@@ -593,7 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await refreshThreadMessages(activeLeadId);
       }
     } catch (err) {
-      alert(`Send error: ${err.message}`);
+      showToast(`Send error: ${err.message}`, 'error');
     }
   });
 
@@ -640,13 +667,26 @@ document.addEventListener('DOMContentLoaded', () => {
       .attr('viewBox', `0 0 ${width} ${height}`)
       .append('g');
 
-    // Zoom & Pan capability
+    // Zoom & Pan capability with floating controls
     const zoomBehavior = d3.zoom()
       .scaleExtent([0.5, 4])
       .on('zoom', (event) => {
         svg.attr('transform', event.transform);
       });
     d3.select(svgEl).call(zoomBehavior);
+
+    // Bind floating zoom buttons
+    const btnZoomIn = document.getElementById('btn-graph-zoom-in');
+    const btnZoomOut = document.getElementById('btn-graph-zoom-out');
+    const btnZoomReset = document.getElementById('btn-graph-zoom-reset');
+
+    if (btnZoomIn) btnZoomIn.onclick = () => d3.select(svgEl).transition().duration(250).call(zoomBehavior.scaleBy, 1.3);
+    if (btnZoomOut) btnZoomOut.onclick = () => d3.select(svgEl).transition().duration(250).call(zoomBehavior.scaleBy, 0.75);
+    if (btnZoomReset) btnZoomReset.onclick = () => d3.select(svgEl).transition().duration(350).call(zoomBehavior.transform, d3.zoomIdentity);
+
+    // Tooltip Element
+    const tooltip = document.getElementById('graph-node-tooltip');
+    const graphContainer = document.getElementById('cocitation-graph-container');
 
     // Deep clones of nodes and links so simulation can mutate positions safely
     const nodes = nodesData.map(d => ({ ...d }));
@@ -667,7 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .attr('stroke-width', d => Math.max(1.5, (d.closenessWeight || 1) * 2))
       .attr('stroke-opacity', 0.85);
 
-    // Node container groups with drag interactions
+    // Node container groups with drag & hover tooltip interactions
     const node = svg.append('g')
       .selectAll('g')
       .data(nodes)
@@ -688,7 +728,27 @@ document.addEventListener('DOMContentLoaded', () => {
           d.fx = null;
           d.fy = null;
         })
-      );
+      )
+      .on('mouseenter', (event, d) => {
+        if (!tooltip || !graphContainer) return;
+        tooltip.style.display = 'block';
+        const isOrigin = d.group === 'origin';
+        tooltip.innerHTML = `
+          <strong style="color: ${isOrigin ? '#60a5fa' : '#f8fafc'}; font-size: 13px;">${d.id}</strong><br>
+          <span style="color: #94a3b8;">Entity Type:</span> ${isOrigin ? 'Brand Hub (Protected)' : 'Emerging Competitor'}<br>
+          <span style="color: #94a3b8;">Citations in LLMs:</span> <strong>${d.citationCount || 1}</strong><br>
+          <span style="color: #94a3b8;">Threat Level:</span> <span style="color: ${isOrigin ? '#34d399' : (d.citationCount > 8 ? '#f87171' : '#fbbf24')}; font-weight: 700;">${isOrigin ? 'Primary Origin' : (d.citationCount > 8 ? 'Critical Threat' : 'Monitored Rival')}</span>
+        `;
+      })
+      .on('mousemove', (event) => {
+        if (!tooltip || !graphContainer) return;
+        const rect = graphContainer.getBoundingClientRect();
+        tooltip.style.left = `${Math.min(rect.width - 200, Math.max(10, event.clientX - rect.left + 15))}px`;
+        tooltip.style.top = `${Math.min(rect.height - 100, Math.max(10, event.clientY - rect.top - 10))}px`;
+      })
+      .on('mouseleave', () => {
+        if (tooltip) tooltip.style.display = 'none';
+      });
 
     // Visual circles
     node.append('circle')
@@ -761,10 +821,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       if (data.success) {
         await loadCoCitationTopology();
-        alert(`AI Engine Sweep complete: logged ${data.count} competitive co-citation vectors to TimescaleDB.`);
+        showToast(`AI Engine Sweep complete: logged ${data.count} competitive co-citation vectors.`, 'success');
       }
     } catch (err) {
-      alert(`Sweep failed: ${err.message}`);
+      showToast(`Sweep failed: ${err.message}`, 'error');
     } finally {
       if (btn) btn.textContent = 'Trigger AI Engine Sweep';
     }
@@ -981,10 +1041,10 @@ ${JSON.stringify(data.metaRetargetingPayload || {}, null, 2)}
       const data = await res.json();
       if (data.status === 'completed') {
         await refreshHourlyStatus();
-        alert(`✓ Hourly Cycle Complete: Enhanced ${data.summary.websitesEnhancedCount} website(s) in ${data.summary.durationMs}ms.`);
+        showToast(`Hourly Cycle Complete: Enhanced ${data.summary.websitesEnhancedCount} website(s) in ${data.summary.durationMs}ms.`, 'success');
       }
     } catch (err) {
-      alert(`Error running hourly cycle: ${err.message}`);
+      showToast(`Error running hourly cycle: ${err.message}`, 'error');
     } finally {
       if (btn) btn.textContent = '▶ Run Hourly Cycle Now';
     }
