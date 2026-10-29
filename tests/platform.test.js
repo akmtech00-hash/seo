@@ -3,6 +3,7 @@
  */
 
 const assert = require('assert');
+const db = require('../backend/database/db');
 const cryptoVault = require('../backend/services/crypto_vault');
 const chunkerService = require('../backend/services/chunker_service');
 const axoService = require('../backend/services/axo_service');
@@ -253,6 +254,72 @@ async function runTests() {
 
     const status = hourlyEnhancer.getStatus();
     assert.strictEqual(status.totalCyclesRecorded >= 1, true);
+  });
+
+  // 13. Authentication, Subscription Gate & 1-Day Free Trial Tests
+  const authService = require('../backend/services/auth_service');
+
+  await testAsync('AuthService: Creating an account with 1-Day Free Trial sets exactly 24-hour window', async () => {
+    const signup = await authService.signup({
+      email: 'trial.tester@fintechtest.io',
+      password: 'securePassword99!',
+      name: 'Trial Tester',
+      startTrial: true
+    });
+
+    assert.strictEqual(signup.user.subscription_status, 'trialing');
+    assert.strictEqual(signup.user.subscription_tier, 'trial_1day');
+    assert.strictEqual(signup.allowed, true);
+    assert.ok(signup.token.startsWith('sess_'));
+
+    // Check 24-hour arithmetic precision (within 5 seconds tolerance)
+    const diffHours = (new Date(signup.user.trial_ends_at).getTime() - new Date(signup.user.trial_started_at).getTime()) / (1000 * 60 * 60);
+    assert.strictEqual(Math.round(diffHours), 24);
+
+    // Verify session
+    const session = await authService.verifySession(signup.token);
+    assert.strictEqual(session.valid, true);
+    assert.strictEqual(session.allowed, true);
+    assert.ok(session.trialRemainingMs > 86000000); // ~24h
+  });
+
+  await testAsync('AuthService: Expired trial revokes portal access immediately (allowed: false)', async () => {
+    // Create user with already-expired trial
+    const expiredUser = await db.createUser({
+      email: 'expired.trial@fintechtest.io',
+      passwordHash: authService.hashPassword('pass123'),
+      name: 'Expired User',
+      subscription_status: 'trialing',
+      subscription_tier: 'trial_1day',
+      trial_started_at: new Date(Date.now() - 90000000), // 25 hours ago
+      trial_ends_at: new Date(Date.now() - 3600000),     // 1 hour ago
+      session_token: 'sess_test_expired_token'
+    });
+
+    const session = await authService.verifySession(expiredUser.session_token);
+    assert.strictEqual(session.valid, true);
+    assert.strictEqual(session.allowed, false);
+    assert.strictEqual(session.reason, 'trial_expired');
+    assert.strictEqual(session.trialRemainingMs, 0);
+  });
+
+  await testAsync('AuthService: Subscribing to paid plan restores portal access for expired user', async () => {
+    const expiredUser = await db.getUserByEmail('expired.trial@fintechtest.io');
+    const upgraded = await authService.subscribe(expiredUser.id, 'scale_monthly');
+
+    assert.strictEqual(upgraded.subscription_status, 'active');
+    assert.strictEqual(upgraded.subscription_tier, 'scale_monthly');
+
+    const session = await authService.verifySession(expiredUser.session_token);
+    assert.strictEqual(session.valid, true);
+    assert.strictEqual(session.allowed, true);
+    assert.strictEqual(session.reason, 'authorized');
+  });
+
+  await testAsync('AuthService: Unauthenticated token is blocked with valid: false, allowed: false', async () => {
+    const session = await authService.verifySession('invalid_nonexistent_token_999');
+    assert.strictEqual(session.valid, false);
+    assert.strictEqual(session.allowed, false);
   });
 
   console.log(`\n=======================================================`);

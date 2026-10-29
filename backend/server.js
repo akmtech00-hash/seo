@@ -23,6 +23,8 @@ const promptCompilerService = require('./services/prompt_compiler');
 const complianceService = require('./services/compliance_service');
 const hourlyEnhancementService = require('./services/hourly_enhancement_service');
 
+const authService = require('./services/auth_service');
+const authRouter = require('./routes/auth');
 const oauthRouter = require('./routes/oauth');
 const adGuardRouter = require('./routes/ad_guard');
 const crmRouter = require('./routes/crm');
@@ -36,16 +38,70 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Standard Cookie Parser
+app.use((req, res, next) => {
+  req.cookies = {};
+  const cookieHeader = req.headers.cookie;
+  if (cookieHeader) {
+    cookieHeader.split(';').forEach(c => {
+      const [k, ...v] = c.split('=');
+      if (k) req.cookies[k.trim()] = decodeURIComponent(v.join('=').trim());
+    });
+  }
+  next();
+});
+
 // Enterprise Modular Routers
+app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/oauth', oauthRouter);
 app.use('/api/v1/ad-guard', adGuardRouter);
 app.use('/api/v1/crm', crmRouter);
 app.use('/api/v1/billing', billingRouter);
 
-// Serve Static Assets (Public site, In-App Dashboard, CDN scripts)
-app.use(express.static(path.join(__dirname, '..')));
+// =========================================================================
+// CLIENT PORTAL GATE MIDDLEWARE
+// Only authenticated users with active subscription or 1-day trial can enter
+// =========================================================================
+const portalGate = async (req, res, next) => {
+  // Extract token from cookie, Authorization header, or query param
+  const token = req.cookies?.aegis_session_token ||
+                (req.headers.authorization ? req.headers.authorization.replace('Bearer ', '').trim() : null) ||
+                req.query?.token;
+
+  const session = await authService.verifySession(token);
+  if (!session.valid) {
+    if (req.xhr || req.headers.accept?.includes('application/json')) {
+      return res.status(401).json({ success: false, error: 'Authentication required to enter client portal' });
+    }
+    return res.redirect('/login.html?redirect=/dashboard&reason=auth_required');
+  }
+
+  if (!session.allowed) {
+    if (req.xhr || req.headers.accept?.includes('application/json')) {
+      return res.status(403).json({ success: false, error: 'Active subscription or free trial required', reason: session.reason });
+    }
+    return res.redirect(`/login.html?redirect=/dashboard&reason=${session.reason || 'subscription_required'}`);
+  }
+
+  // Attach session user to req for downstream usage
+  req.user = session.user;
+  next();
+};
+
+// Protect Client Portal paths
+app.use('/dashboard', portalGate, express.static(path.join(__dirname, '..', 'dashboard')));
 app.use('/cdn', express.static(path.join(__dirname, '..', 'cdn')));
-app.use('/dashboard', express.static(path.join(__dirname, '..', 'dashboard')));
+
+// Prevent root static middleware from serving dashboard files directly without gate
+app.use((req, res, next) => {
+  if (req.path.startsWith('/dashboard')) {
+    return portalGate(req, res, next);
+  }
+  next();
+});
+
+// Serve Public Static Assets
+app.use(express.static(path.join(__dirname, '..')));
 
 // =========================================================================
 // API ROUTE DEFINITIONS

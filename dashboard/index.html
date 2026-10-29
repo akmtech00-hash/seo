@@ -122,10 +122,24 @@
         </button>
       </nav>
 
-      <div class="sidebar-footer">
-        <a href="/" class="btn-ghost" style="font-size: 13px; text-decoration: none; display: flex; align-items: center; gap: 6px;">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-          Back to Public Site
+      <div class="sidebar-footer" style="padding: 14px 16px; border-top: 1px solid var(--color-hairline); display: flex; flex-direction: column; gap: 10px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div id="sidebar-user-avatar" style="width: 28px; height: 28px; border-radius: 50%; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;">
+              OP
+            </div>
+            <div style="line-height: 1.2;">
+              <div id="sidebar-user-name" style="font-size: 12.5px; font-weight: 700; color: var(--color-ink-navy); max-width: 105px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Operator</div>
+              <div id="sidebar-user-tier" style="font-size: 11px; color: var(--color-slate-gray);">1-Day Trial</div>
+            </div>
+          </div>
+          <button id="btn-portal-logout" onclick="handleLogout()" title="Sign Out" style="background: transparent; border: none; cursor: pointer; color: var(--color-slate-gray); padding: 4px; border-radius: 4px; display: flex; align-items: center;">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          </button>
+        </div>
+        <a href="/" class="btn-ghost" style="font-size: 12px; text-decoration: none; display: flex; align-items: center; gap: 6px; color: var(--color-slate-gray);">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Public Website
         </a>
       </div>
     </aside>
@@ -150,6 +164,15 @@
         </div>
 
         <div style="display: flex; align-items: center; gap: 12px;">
+          <!-- 1-Day Free Trial Telemetry Countdown Pill -->
+          <div id="topbar-trial-banner" style="display: none; align-items: center; gap: 8px; background: rgba(0, 107, 255, 0.08); border: 1px solid rgba(0, 107, 255, 0.28); padding: 5px 12px; border-radius: 20px; font-size: 12px; color: var(--color-ink-navy);">
+            <span style="font-weight: 700; color: var(--color-signal-blue);">⏳ 1-Day Trial:</span>
+            <span id="trial-countdown-text" style="font-family: monospace; font-weight: 700; color: var(--color-ink-navy);">24h 00m left</span>
+            <button id="btn-topbar-upgrade" onclick="openUpgradeModal()" style="background: var(--color-signal-blue); color: white; border: none; border-radius: 12px; padding: 3px 10px; font-size: 11px; font-weight: 700; cursor: pointer; transition: opacity 0.2s;">
+              Upgrade
+            </button>
+          </div>
+
           <a href="/api/v1/websites/fintechdb.io/export/report" target="_blank" class="btn btn-ghost" id="btn-export-report" style="font-size: 13px; padding: 8px 14px; border: 1px solid var(--color-hairline);">
             📄 Export Executive Report
           </a>
@@ -816,6 +839,78 @@
           <input type="text" id="input-lead-reply" class="dash-input" placeholder="Simulate lead message: 'What are your SLA guarantees?' or 'Need custom NDA'" style="flex: 1;" required>
           <button type="submit" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">Send Message</button>
         </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Upgrade Subscription Modal Dialog -->
+  <div id="upgrade-modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(11, 53, 88, 0.45); backdrop-filter: blur(4px); z-index: 250; align-items: center; justify-content: center;">
+    <div style="background: var(--color-paper); width: 92%; max-width: 580px; border-radius: var(--radius-cards); box-shadow: var(--shadow-product); border: 1px solid var(--color-hairline); overflow: hidden; animation: fadeIn 0.2s ease;">
+      
+      <div style="padding: 22px 28px; border-bottom: 1px solid var(--color-hairline); display: flex; justify-content: space-between; align-items: center; background: var(--color-pebble);">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <strong style="font-size: 17px; color: var(--color-ink-navy);">Upgrade Your Aegis Plan</strong>
+            <span class="badge-pill success" style="font-size: 11px;">Instant Activation</span>
+          </div>
+          <div style="font-size: 12.5px; color: var(--color-slate-gray); margin-top: 2px;">
+            Unlock permanent client portal access, continuous AEO optimization, and real-time ad protection.
+          </div>
+        </div>
+        <button onclick="closeUpgradeModal()" style="background: transparent; border: none; font-size: 20px; color: var(--color-slate-gray); cursor: pointer;">✕</button>
+      </div>
+
+      <div style="padding: 24px 28px;">
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+          
+          <div class="dash-card modal-plan-option selected" id="opt-plan-growth" onclick="selectModalPlan('growth_monthly')" style="padding: 14px 18px; cursor: pointer; border: 1.5px solid var(--color-signal-blue); background: #eff6ff; display: flex; justify-content: space-between; align-items: center; border-radius: var(--radius-cards);">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <strong style="font-size: 15px; color: var(--color-ink-navy);">Growth Plan</strong>
+                <span class="badge-pill" style="font-size: 10px;">Fast Start</span>
+              </div>
+              <div style="font-size: 12px; color: var(--color-slate-gray); margin-top: 2px;">5,000 pages, hourly crawler, daily sales battlecards</div>
+            </div>
+            <div style="text-align: right;">
+              <strong style="font-size: 18px; color: var(--color-ink-navy);">$499</strong>
+              <span style="font-size: 11px; color: var(--color-slate-gray); display: block;">/month</span>
+            </div>
+          </div>
+
+          <div class="dash-card modal-plan-option" id="opt-plan-scale" onclick="selectModalPlan('scale_monthly')" style="padding: 14px 18px; cursor: pointer; border: 1px solid var(--color-hairline); display: flex; justify-content: space-between; align-items: center; border-radius: var(--radius-cards);">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <strong style="font-size: 15px; color: var(--color-ink-navy);">Scale Plan</strong>
+                <span class="badge-pill success" style="font-size: 10px;">Recommended</span>
+              </div>
+              <div style="font-size: 12px; color: var(--color-slate-gray); margin-top: 2px;">25,000 pages, sub-second edge interceptor, Shopify sync</div>
+            </div>
+            <div style="text-align: right;">
+              <strong style="font-size: 18px; color: var(--color-ink-navy);">$1,499</strong>
+              <span style="font-size: 11px; color: var(--color-slate-gray); display: block;">/month</span>
+            </div>
+          </div>
+
+          <div class="dash-card modal-plan-option" id="opt-plan-enterprise" onclick="selectModalPlan('enterprise_monthly')" style="padding: 14px 18px; cursor: pointer; border: 1px solid var(--color-hairline); display: flex; justify-content: space-between; align-items: center; border-radius: var(--radius-cards);">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <strong style="font-size: 15px; color: var(--color-ink-navy);">Enterprise OS</strong>
+                <span class="badge-pill" style="font-size: 10px; background: #e0e7ff; color: #4338ca;">Full Dedicated</span>
+              </div>
+              <div style="font-size: 12px; color: var(--color-slate-gray); margin-top: 2px;">Unlimited pages, custom TimescaleDB instance, 24/7 SLA</div>
+            </div>
+            <div style="text-align: right;">
+              <strong style="font-size: 18px; color: var(--color-ink-navy);">$4,999</strong>
+              <span style="font-size: 11px; color: var(--color-slate-gray); display: block;">/month</span>
+            </div>
+          </div>
+
+        </div>
+
+        <button id="btn-confirm-upgrade" onclick="executePlanUpgrade()" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 15px; font-weight: 700; border-radius: var(--radius-sm);">
+          Confirm Subscription & Keep Portal Unlocked
+        </button>
       </div>
 
     </div>

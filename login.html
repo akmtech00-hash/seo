@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aegis Growth OS — Client Portal Access & 1-Day Free Trial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    :root {
+      --color-ink-navy: #0b3558;
+      --color-signal-blue: #006bff;
+      --color-signal-blue-hover: #0056cc;
+      --color-slate-gray: #476788;
+      --color-cloud: #f8f9fb;
+      --color-paper: #ffffff;
+      --color-pebble: #f0f3f8;
+      --color-hairline: #d4e0ed;
+      --color-emerald: #0ea5e9;
+      --color-success: #10b981;
+      --color-amber: #f59e0b;
+      --color-crimson: #ef4444;
+      --shadow-card: 0 4px 12px rgba(11, 53, 88, 0.05), 0 1px 2px rgba(11, 53, 88, 0.03);
+      --shadow-hover: 0 12px 28px rgba(11, 53, 88, 0.08), 0 2px 4px rgba(11, 53, 88, 0.04);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+    }
+
+    body.auth-page {
+      background-color: var(--color-cloud);
+      color: var(--color-ink-navy);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Ambient Decorative Gradient Blobs */
+    .ambient-blob-1 {
+      position: absolute;
+      top: -100px;
+      left: -100px;
+      width: 480px;
+      height: 480px;
+      background: radial-gradient(circle, rgba(0, 107, 255, 0.07) 0%, rgba(255, 255, 255, 0) 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .ambient-blob-2 {
+      position: absolute;
+      bottom: -150px;
+      right: -100px;
+      width: 550px;
+      height: 550px;
+      background: radial-gradient(circle, rgba(236, 72, 153, 0.05) 0%, rgba(255, 255, 255, 0) 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .auth-header {
+      padding: 24px 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 10;
+    }
+
+    .auth-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--color-ink-navy);
+      font-weight: 700;
+      font-size: 19px;
+      letter-spacing: -0.02em;
+    }
+
+    .auth-brand-logo {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, var(--color-signal-blue) 0%, var(--color-ink-navy) 100%);
+      color: white;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      box-shadow: 0 2px 6px rgba(0, 107, 255, 0.25);
+    }
+
+    .auth-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 20px 48px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .auth-card {
+      background: var(--color-paper);
+      border: 1px solid var(--color-hairline);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      width: 100%;
+      max-width: 520px;
+      padding: 36px 40px;
+      box-sizing: border-box;
+      transition: box-shadow 0.2s ease;
+    }
+
+    .auth-alert {
+      display: none;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      margin-bottom: 24px;
+      line-height: 1.5;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .auth-alert.info {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+    }
+
+    .auth-alert.warning {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+    }
+
+    .auth-alert.error {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #991b1b;
+    }
+
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--color-hairline);
+      margin-bottom: 24px;
+      gap: 20px;
+    }
+
+    .auth-tab-btn {
+      background: none;
+      border: none;
+      padding: 10px 4px 14px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-slate-gray);
+      cursor: pointer;
+      position: relative;
+      transition: color 0.2s ease;
+    }
+
+    .auth-tab-btn.active {
+      color: var(--color-ink-navy);
+    }
+
+    .auth-tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--color-signal-blue);
+      border-radius: 2px;
+    }
+
+    .trial-highlight-box {
+      background: linear-gradient(135deg, rgba(0, 107, 255, 0.05) 0%, rgba(14, 165, 233, 0.05) 100%);
+      border: 1px solid rgba(0, 107, 255, 0.25);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .trial-badge-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(0, 107, 255, 0.12);
+      color: var(--color-signal-blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--color-ink-navy);
+      margin-bottom: 6px;
+    }
+
+    .form-control {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 11px 14px;
+      border: 1px solid var(--color-hairline);
+      border-radius: var(--radius-sm);
+      font-size: 14.5px;
+      color: var(--color-ink-navy);
+      background: var(--color-paper);
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--color-signal-blue);
+      box-shadow: 0 0 0 3px rgba(0, 107, 255, 0.15);
+    }
+
+    .plan-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 14px;
+      margin-bottom: 20px;
+    }
+
+    .plan-card-radio {
+      border: 1px solid var(--color-hairline);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+      background: var(--color-paper);
+    }
+
+    .plan-card-radio:hover {
+      border-color: #93c5fd;
+      background: #f8fafc;
+    }
+
+    .plan-card-radio.selected {
+      border-color: var(--color-signal-blue);
+      background: #eff6ff;
+      box-shadow: 0 0 0 1px var(--color-signal-blue);
+    }
+
+    .plan-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .plan-radio-circle {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--color-slate-gray);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s;
+    }
+
+    .plan-card-radio.selected .plan-radio-circle {
+      border-color: var(--color-signal-blue);
+      background: var(--color-signal-blue);
+    }
+
+    .plan-card-radio.selected .plan-radio-circle::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: white;
+      border-radius: 50%;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 13px 20px;
+      background: var(--color-signal-blue);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s ease, transform 0.1s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-submit:hover {
+      background: var(--color-signal-blue-hover);
+    }
+
+    .btn-submit:active {
+      transform: scale(0.99);
+    }
+
+    .demo-login-chip {
+      display: inline-block;
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--color-slate-gray);
+      background: var(--color-pebble);
+      border: 1px dashed var(--color-hairline);
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .demo-login-chip:hover {
+      border-color: var(--color-signal-blue);
+      color: var(--color-signal-blue);
+      background: #eff6ff;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="auth-page">
+
+  <div class="ambient-blob-1"></div>
+  <div class="ambient-blob-2"></div>
+
+  <!-- Header -->
+  <header class="auth-header">
+    <a href="/" class="auth-brand">
+      <div class="auth-brand-logo">A</div>
+      <span>Aegis Growth OS</span>
+    </a>
+    <a href="/" class="btn btn-ghost" style="font-size: 13.5px; padding: 7px 14px; border: 1px solid var(--color-hairline); border-radius: var(--radius-sm); text-decoration: none; color: var(--color-ink-navy);">
+      ← Back to Main Site
+    </a>
+  </header>
+
+  <!-- Auth & Subscription Gate Container -->
+  <main class="auth-container">
+    <div class="auth-card">
+      
+      <!-- Contextual Gate Notice -->
+      <div id="gate-alert" class="auth-alert"></div>
+
+      <!-- Tab Switcher -->
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="tab-btn-trial" onclick="switchAuthMode('trial')">1-Day Free Trial</button>
+        <button class="auth-tab-btn" id="tab-btn-signin" onclick="switchAuthMode('signin')">Sign In</button>
+        <button class="auth-tab-btn" id="tab-btn-subscribe" onclick="switchAuthMode('subscribe')">Paid Plans</button>
+      </div>
+
+      <!-- Mode 1: 1-Day Free Trial (Zero Friction) -->
+      <div id="pane-trial">
+        <div class="trial-highlight-box">
+          <div class="trial-badge-icon">⏳</div>
+          <div>
+            <div style="font-weight: 700; font-size: 14.5px; color: var(--color-ink-navy); margin-bottom: 2px;">
+              24-Hour Full Access Free Trial
+            </div>
+            <div style="font-size: 12.5px; color: var(--color-slate-gray); line-height: 1.4;">
+              Test all autonomous AEO, GEO, Ad Guard, and CMS sync tools instantly. <strong>No credit card required</strong>.
+            </div>
+          </div>
+        </div>
+
+        <form id="form-trial" onsubmit="handleTrialSubmit(event)">
+          <div class="form-group">
+            <label for="trial-name">Full Name</label>
+            <input type="text" id="trial-name" class="form-control" placeholder="Alex Morgan" required>
+          </div>
+          <div class="form-group">
+            <label for="trial-email">Work Email</label>
+            <input type="email" id="trial-email" class="form-control" placeholder="alex@company.com" required>
+          </div>
+          <div class="form-group">
+            <label for="trial-company">Company or Domain</label>
+            <input type="text" id="trial-company" class="form-control" placeholder="fintechdb.io" required>
+          </div>
+          <div class="form-group">
+            <label for="trial-password">Create Password</label>
+            <input type="password" id="trial-password" class="form-control" placeholder="Minimum 6 characters" minlength="6" required>
+          </div>
+
+          <button type="submit" class="btn-submit" id="btn-start-trial-action">
+            <span>⚡ Activate 1-Day Free Trial & Enter Portal</span>
+          </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 18px; font-size: 12.5px; color: var(--color-slate-gray);">
+          Already have an account? <a href="javascript:void(0)" onclick="switchAuthMode('signin')" style="color: var(--color-signal-blue); font-weight: 600; text-decoration: none;">Sign in here</a>
+        </div>
+      </div>
+
+      <!-- Mode 2: Existing User Sign In -->
+      <div id="pane-signin" style="display: none;">
+        <div style="margin-bottom: 20px;">
+          <h2 style="margin: 0 0 6px; font-size: 20px; font-weight: 700; color: var(--color-ink-navy);">Welcome back</h2>
+          <p style="margin: 0; font-size: 13.5px; color: var(--color-slate-gray);">Log into your Aegis Growth OS enterprise dashboard.</p>
+        </div>
+
+        <form id="form-signin" onsubmit="handleSignInSubmit(event)">
+          <div class="form-group">
+            <label for="signin-email">Email Address</label>
+            <input type="email" id="signin-email" class="form-control" placeholder="admin@fintechdb.io" required>
+          </div>
+          <div class="form-group">
+            <label for="signin-password">Password</label>
+            <input type="password" id="signin-password" class="form-control" placeholder="••••••••" required>
+          </div>
+
+          <button type="submit" class="btn-submit" id="btn-signin-action">
+            <span>Sign In to Client Portal</span>
+          </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 14px;">
+          <div class="demo-login-chip" onclick="fillDemoCredentials()">
+            🔑 Demo Account: <strong>admin@fintechdb.io</strong> / <strong>password123</strong> (Click to prefill)
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 18px; font-size: 12.5px; color: var(--color-slate-gray);">
+          Need an account? <a href="javascript:void(0)" onclick="switchAuthMode('trial')" style="color: var(--color-signal-blue); font-weight: 600; text-decoration: none;">Start 1-Day Free Trial</a>
+        </div>
+      </div>
+
+      <!-- Mode 3: Subscribe to Paid Tier Directly -->
+      <div id="pane-subscribe" style="display: none;">
+        <div style="margin-bottom: 16px;">
+          <h2 style="margin: 0 0 6px; font-size: 20px; font-weight: 700; color: var(--color-ink-navy);">Choose Your Subscription</h2>
+          <p style="margin: 0; font-size: 13.5px; color: var(--color-slate-gray);">Select an enterprise plan to immediately unlock full client portal access.</p>
+        </div>
+
+        <form id="form-subscribe" onsubmit="handleSubscribeSubmit(event)">
+          <div class="plan-grid">
+            
+            <div class="plan-card-radio selected" onclick="selectPlan(this, 'growth_monthly')">
+              <div class="plan-info">
+                <div class="plan-radio-circle"></div>
+                <div>
+                  <div style="font-weight: 700; font-size: 14.5px; color: var(--color-ink-navy);">Growth Tier</div>
+                  <div style="font-size: 12px; color: var(--color-slate-gray);">5,000 pages, hourly crawler, daily battlecards</div>
+                </div>
+              </div>
+              <div style="font-weight: 700; font-size: 16px; color: var(--color-ink-navy);">$499<span style="font-size: 11px; font-weight: 400; color: var(--color-slate-gray);">/mo</span></div>
+            </div>
+
+            <div class="plan-card-radio" onclick="selectPlan(this, 'scale_monthly')">
+              <div class="plan-info">
+                <div class="plan-radio-circle"></div>
+                <div>
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="font-weight: 700; font-size: 14.5px; color: var(--color-ink-navy);">Scale Tier</span>
+                    <span style="background: rgba(0, 107, 255, 0.1); color: var(--color-signal-blue); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;">POPULAR</span>
+                  </div>
+                  <div style="font-size: 12px; color: var(--color-slate-gray);">25,000 pages, sub-second edge interceptor, Shopify sync</div>
+                </div>
+              </div>
+              <div style="font-weight: 700; font-size: 16px; color: var(--color-ink-navy);">$1,499<span style="font-size: 11px; font-weight: 400; color: var(--color-slate-gray);">/mo</span></div>
+            </div>
+
+            <div class="plan-card-radio" onclick="selectPlan(this, 'enterprise_monthly')">
+              <div class="plan-info">
+                <div class="plan-radio-circle"></div>
+                <div>
+                  <div style="font-weight: 700; font-size: 14.5px; color: var(--color-ink-navy);">Enterprise OS</div>
+                  <div style="font-size: 12px; color: var(--color-slate-gray);">Unlimited pages, dedicated TimescaleDB, 24/7 autonomous defense</div>
+                </div>
+              </div>
+              <div style="font-weight: 700; font-size: 16px; color: var(--color-ink-navy);">$4,999<span style="font-size: 11px; font-weight: 400; color: var(--color-slate-gray);">/mo</span></div>
+            </div>
+
+          </div>
+
+          <div class="form-group">
+            <label for="sub-email">Account Email</label>
+            <input type="email" id="sub-email" class="form-control" placeholder="billing@company.com" required>
+          </div>
+          <div class="form-group">
+            <label for="sub-password">Password</label>
+            <input type="password" id="sub-password" class="form-control" placeholder="••••••••" required>
+          </div>
+
+          <button type="submit" class="btn-submit" id="btn-subscribe-action">
+            <span>Subscribe & Enter Client Portal</span>
+          </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 18px; font-size: 12.5px; color: var(--color-slate-gray);">
+          Prefer to test first? <a href="javascript:void(0)" onclick="switchAuthMode('trial')" style="color: var(--color-signal-blue); font-weight: 600; text-decoration: none;">Try 1-Day Free Trial</a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    let selectedPlan = 'growth_monthly';
+
+    // Parse URL query parameters to display targeted warnings
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const reason = params.get('reason');
+      const step = params.get('step');
+      const alertBox = document.getElementById('gate-alert');
+
+      if (reason === 'trial_expired') {
+        alertBox.className = 'auth-alert warning';
+        alertBox.innerHTML = '<span>⚠️</span><div><strong>Your 1-Day Free Trial has ended.</strong> Please choose a subscription tier below to resume real-time autonomous optimizations and client portal access.</div>';
+        alertBox.style.display = 'flex';
+        switchAuthMode('subscribe');
+      } else if (reason === 'subscription_required') {
+        alertBox.className = 'auth-alert warning';
+        alertBox.innerHTML = '<span>🔒</span><div><strong>Subscription Required:</strong> The client portal is strictly gated for active subscribers and active 1-day free trials. Select a plan or activate your 24-hour free trial below.</div>';
+        alertBox.style.display = 'flex';
+      } else if (reason === 'auth_required') {
+        alertBox.className = 'auth-alert info';
+        alertBox.innerHTML = '<span>ℹ️</span><div><strong>Authentication Required:</strong> Please sign in or activate your 1-day free trial to access the Aegis Client Portal.</div>';
+        alertBox.style.display = 'flex';
+      }
+
+      if (step === 'subscribe') {
+        switchAuthMode('subscribe');
+      }
+    });
+
+    function switchAuthMode(mode) {
+      document.getElementById('pane-trial').style.display = mode === 'trial' ? 'block' : 'none';
+      document.getElementById('pane-signin').style.display = mode === 'signin' ? 'block' : 'none';
+      document.getElementById('pane-subscribe').style.display = mode === 'subscribe' ? 'block' : 'none';
+
+      document.getElementById('tab-btn-trial').classList.toggle('active', mode === 'trial');
+      document.getElementById('tab-btn-signin').classList.toggle('active', mode === 'signin');
+      document.getElementById('tab-btn-subscribe').classList.toggle('active', mode === 'subscribe');
+    }
+
+    function selectPlan(cardEl, planKey) {
+      document.querySelectorAll('.plan-card-radio').forEach(c => c.classList.remove('selected'));
+      cardEl.classList.add('selected');
+      selectedPlan = planKey;
+    }
+
+    function fillDemoCredentials() {
+      document.getElementById('signin-email').value = 'admin@fintechdb.io';
+      document.getElementById('signin-password').value = 'password123';
+    }
+
+    // Handle 1-Day Trial Creation
+    async function handleTrialSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-start-trial-action');
+      const alertBox = document.getElementById('gate-alert');
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳ Activating 24-Hour Free Trial...</span>';
+
+      const payload = {
+        name: document.getElementById('trial-name').value.trim(),
+        email: document.getElementById('trial-email').value.trim(),
+        companyName: document.getElementById('trial-company').value.trim(),
+        password: document.getElementById('trial-password').value,
+        startTrial: true
+      };
+
+      try {
+        const res = await fetch('/api/v1/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          throw new Error(data.error || 'Failed to activate trial');
+        }
+
+        // Store session token in localStorage for clients using bearer header
+        localStorage.setItem('aegis_session_token', data.token);
+        localStorage.setItem('aegis_user', JSON.stringify(data.user));
+
+        alertBox.className = 'auth-alert info';
+        alertBox.innerHTML = '<span>✓</span><div><strong>Success!</strong> 1-Day Free Trial activated. Launching Client Portal...</div>';
+        alertBox.style.display = 'flex';
+
+        setTimeout(() => {
+          window.location.href = data.redirectUrl || '/dashboard';
+        }, 800);
+      } catch (err) {
+        alertBox.className = 'auth-alert error';
+        alertBox.innerHTML = `<span>✕</span><div>${err.message}</div>`;
+        alertBox.style.display = 'flex';
+        btn.disabled = false;
+        btn.innerHTML = '<span>⚡ Activate 1-Day Free Trial & Enter Portal</span>';
+      }
+    }
+
+    // Handle User Sign In
+    async function handleSignInSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-signin-action');
+      const alertBox = document.getElementById('gate-alert');
+      btn.disabled = true;
+      btn.innerHTML = '<span>Verifying credentials...</span>';
+
+      const email = document.getElementById('signin-email').value.trim();
+      const password = document.getElementById('signin-password').value;
+
+      try {
+        const res = await fetch('/api/v1/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          throw new Error(data.error || 'Invalid credentials');
+        }
+
+        localStorage.setItem('aegis_session_token', data.token);
+        localStorage.setItem('aegis_user', JSON.stringify(data.user));
+
+        if (!data.allowed) {
+          alertBox.className = 'auth-alert warning';
+          alertBox.innerHTML = '<span>🔒</span><div>Your account does not have an active subscription or free trial. Please select a plan below.</div>';
+          alertBox.style.display = 'flex';
+          switchAuthMode('subscribe');
+          document.getElementById('sub-email').value = email;
+          btn.disabled = false;
+          btn.innerHTML = '<span>Sign In to Client Portal</span>';
+          return;
+        }
+
+        alertBox.className = 'auth-alert info';
+        alertBox.innerHTML = '<span>✓</span><div>Authenticated! Launching Client Portal...</div>';
+        alertBox.style.display = 'flex';
+
+        setTimeout(() => {
+          window.location.href = data.redirectUrl || '/dashboard';
+        }, 500);
+      } catch (err) {
+        alertBox.className = 'auth-alert error';
+        alertBox.innerHTML = `<span>✕</span><div>${err.message}</div>`;
+        alertBox.style.display = 'flex';
+        btn.disabled = false;
+        btn.innerHTML = '<span>Sign In to Client Portal</span>';
+      }
+    }
+
+    // Handle Paid Subscription
+    async function handleSubscribeSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-subscribe-action');
+      const alertBox = document.getElementById('gate-alert');
+      btn.disabled = true;
+      btn.innerHTML = '<span>Processing subscription...</span>';
+
+      const email = document.getElementById('sub-email').value.trim();
+      const password = document.getElementById('sub-password').value;
+
+      try {
+        // First try to signup with the plan
+        let res = await fetch('/api/v1/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, plan: selectedPlan, startTrial: false })
+        });
+        let data = await res.json();
+
+        // If user already exists, login and upgrade plan
+        if (!data.success && data.error && data.error.includes('already exists')) {
+          const loginRes = await fetch('/api/v1/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+          const loginData = await loginRes.json();
+          if (!loginData.success) {
+            throw new Error('Account exists with this email, but password was incorrect.');
+          }
+
+          const upgradeRes = await fetch('/api/v1/auth/subscribe', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${loginData.token}`
+            },
+            body: JSON.stringify({ plan: selectedPlan })
+          });
+          data = await upgradeRes.json();
+          data.token = loginData.token;
+        } else if (!data.success) {
+          throw new Error(data.error || 'Subscription failed');
+        }
+
+        if (data.token) {
+          localStorage.setItem('aegis_session_token', data.token);
+          localStorage.setItem('aegis_user', JSON.stringify(data.user));
+        }
+
+        alertBox.className = 'auth-alert info';
+        alertBox.innerHTML = '<span>✓</span><div><strong>Subscription Active!</strong> Welcome to Aegis Growth OS. Launching Portal...</div>';
+        alertBox.style.display = 'flex';
+
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 800);
+      } catch (err) {
+        alertBox.className = 'auth-alert error';
+        alertBox.innerHTML = `<span>✕</span><div>${err.message}</div>`;
+        alertBox.style.display = 'flex';
+        btn.disabled = false;
+        btn.innerHTML = '<span>Subscribe & Enter Client Portal</span>';
+      }
+    }
+  </script>
+</body>
+</html>

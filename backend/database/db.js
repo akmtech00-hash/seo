@@ -137,7 +137,22 @@ const memoryStore = {
       },
       current_period_scrapes: 842
     }
-  }
+  },
+  users: [
+    {
+      id: 'user_admin_01',
+      email: 'admin@fintechdb.io',
+      passwordHash: '9a9167d132e7aa4d6f1f43c318dd257bb4e76e37a0e672fa6126bdc5ab61deba', // 'password123' with salt
+      name: 'Alex Turner',
+      company_id: 'comp_01',
+      subscription_status: 'active', // 'trialing' | 'active' | 'expired' | 'none'
+      subscription_tier: 'scale_monthly',
+      trial_started_at: null,
+      trial_ends_at: null,
+      session_token: 'sess_live_admin_token',
+      created_at: new Date()
+    }
+  ]
 };
 
 const db = {
@@ -342,6 +357,45 @@ const db = {
     }
     Object.assign(memoryStore.billingAccounts[companyId], updateData);
     return memoryStore.billingAccounts[companyId];
+  },
+
+  async getUserByEmail(email) {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    return memoryStore.users.find(u => u.email.toLowerCase() === cleanEmail) || null;
+  },
+
+  async getUserByToken(token) {
+    if (!token) return null;
+    return memoryStore.users.find(u => u.session_token === token) || null;
+  },
+
+  async getUserById(id) {
+    return memoryStore.users.find(u => u.id === id) || null;
+  },
+
+  async createUser(userData) {
+    const newUser = {
+      id: `user_${Date.now()}`,
+      email: (userData.email || '').trim().toLowerCase(),
+      passwordHash: userData.passwordHash,
+      name: userData.name || 'Enterprise Operator',
+      company_id: userData.company_id || `comp_${Date.now()}`,
+      subscription_status: userData.subscription_status || 'none',
+      subscription_tier: userData.subscription_tier || null,
+      trial_started_at: userData.trial_started_at || null,
+      trial_ends_at: userData.trial_ends_at || null,
+      session_token: userData.session_token || `sess_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`,
+      created_at: new Date()
+    };
+    memoryStore.users.unshift(newUser);
+    return newUser;
+  },
+
+  async updateUser(id, updateData) {
+    const user = memoryStore.users.find(u => u.id === id);
+    if (!user) return null;
+    Object.assign(user, updateData);
+    return user;
   }
 };
 

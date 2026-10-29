@@ -8,6 +8,179 @@ document.addEventListener('DOMContentLoaded', () => {
   const API_BASE = '/api/v1';
 
   // =========================================================================
+  // 0. AUTH & 1-DAY FREE TRIAL SESSION GATE
+  // =========================================================================
+  let currentAuthUser = null;
+  let countdownTimerId = null;
+
+  async function checkSessionAndTrial() {
+    try {
+      const token = localStorage.getItem('aegis_session_token');
+      const headers = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`${API_BASE}/auth/me`, { headers });
+      const data = await res.json();
+
+      if (!res.ok || !data.authenticated || !data.allowed) {
+        console.warn('Access denied to Client Portal:', data);
+        const reason = data.reason || 'subscription_required';
+        window.location.href = `/login.html?redirect=/dashboard&reason=${reason}`;
+        return false;
+      }
+
+      currentAuthUser = data.user;
+      renderUserIdentity(currentAuthUser);
+      initTrialTelemetry(currentAuthUser);
+      return true;
+    } catch (err) {
+      console.warn('Session check fallback:', err);
+      return true;
+    }
+  }
+
+  function renderUserIdentity(user) {
+    if (!user) return;
+    const nameEl = document.getElementById('sidebar-user-name');
+    const tierEl = document.getElementById('sidebar-user-tier');
+    const avatarEl = document.getElementById('sidebar-user-avatar');
+
+    if (nameEl) nameEl.textContent = user.name || user.email.split('@')[0];
+    if (avatarEl) {
+      const initials = (user.name || user.email).substring(0, 2).toUpperCase();
+      avatarEl.textContent = initials;
+    }
+    if (tierEl) {
+      if (user.subscription_status === 'trialing') {
+        tierEl.textContent = '1-Day Free Trial';
+        tierEl.style.color = 'var(--color-signal-blue)';
+        tierEl.style.fontWeight = '600';
+      } else {
+        const tierName = (user.subscription_tier || 'PRO').replace('_monthly', '').toUpperCase();
+        tierEl.textContent = `${tierName} Plan`;
+        tierEl.style.color = 'var(--color-slate-gray)';
+      }
+    }
+  }
+
+  function initTrialTelemetry(user) {
+    const banner = document.getElementById('topbar-trial-banner');
+    const countdownEl = document.getElementById('trial-countdown-text');
+    if (!banner || !countdownEl) return;
+
+    if (user.subscription_status === 'trialing' && user.trial_ends_at) {
+      banner.style.display = 'flex';
+
+      function updateCountdown() {
+        const end = new Date(user.trial_ends_at).getTime();
+        const diff = end - Date.now();
+
+        if (diff <= 0) {
+          clearInterval(countdownTimerId);
+          countdownEl.textContent = 'Expired';
+          banner.style.borderColor = '#ef4444';
+          showToast('Your 1-Day Free Trial has ended. Redirecting to subscription plans...', 'error');
+          setTimeout(() => {
+            window.location.href = '/login.html?reason=trial_expired';
+          }, 1500);
+          return;
+        }
+
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        countdownEl.textContent = `${hours}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s left`;
+      }
+
+      updateCountdown();
+      if (countdownTimerId) clearInterval(countdownTimerId);
+      countdownTimerId = setInterval(updateCountdown, 1000);
+    } else {
+      banner.style.display = 'none';
+      if (countdownTimerId) clearInterval(countdownTimerId);
+    }
+  }
+
+  // Global methods for Upgrade Modal & Logout
+  let currentSelectedUpgradePlan = 'growth_monthly';
+
+  window.openUpgradeModal = function() {
+    const modal = document.getElementById('upgrade-modal-backdrop');
+    if (modal) modal.style.display = 'flex';
+  };
+
+  window.closeUpgradeModal = function() {
+    const modal = document.getElementById('upgrade-modal-backdrop');
+    if (modal) modal.style.display = 'none';
+  };
+
+  window.selectModalPlan = function(planKey) {
+    currentSelectedUpgradePlan = planKey;
+    document.querySelectorAll('.modal-plan-option').forEach(el => {
+      el.style.border = '1px solid var(--color-hairline)';
+      el.style.background = 'transparent';
+    });
+    const selected = document.getElementById(`opt-plan-${planKey.replace('_monthly', '')}`);
+    if (selected) {
+      selected.style.border = '1.5px solid var(--color-signal-blue)';
+      selected.style.background = '#eff6ff';
+    }
+  };
+
+  window.executePlanUpgrade = async function() {
+    const btn = document.getElementById('btn-confirm-upgrade');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Activating Subscription...';
+    }
+
+    try {
+      const token = localStorage.getItem('aegis_session_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`${API_BASE}/auth/subscribe`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ plan: currentSelectedUpgradePlan })
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to update subscription');
+      }
+
+      showToast(`Successfully upgraded to ${currentSelectedUpgradePlan}! Full portal unlocked.`, 'success');
+      window.closeUpgradeModal();
+
+      if (data.user) {
+        currentAuthUser = data.user;
+        renderUserIdentity(currentAuthUser);
+        initTrialTelemetry(currentAuthUser);
+      }
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Confirm Subscription & Keep Portal Unlocked';
+      }
+    }
+  };
+
+  window.handleLogout = async function() {
+    try {
+      await fetch(`${API_BASE}/auth/logout`, { method: 'POST' });
+    } catch (e) {
+      // Ignore
+    }
+    localStorage.removeItem('aegis_session_token');
+    localStorage.removeItem('aegis_user');
+    window.location.href = '/login.html';
+  };
+
+  // =========================================================================
   // TOAST NOTIFICATION SYSTEM
   // =========================================================================
   function showToast(message, type = 'info') {
@@ -1050,10 +1223,14 @@ ${JSON.stringify(data.metaRetargetingPayload || {}, null, 2)}
     }
   });
 
-  // Load everything on start
-  loadInitialData();
-  loadCoCitationTopology();
-  refreshHourlyStatus();
+  // Verify session first before loading dashboard telemetry
+  checkSessionAndTrial().then(ok => {
+    if (ok) {
+      loadInitialData();
+      loadCoCitationTopology();
+      refreshHourlyStatus();
+    }
+  });
 
 });
 
